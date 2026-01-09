@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import 'login_screen.dart';
 import '../widgets/showcase_card.dart';
+import 'profile_edit_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String studentName;
@@ -90,33 +91,47 @@ class _ProfileScreenState extends State<ProfileScreen>
                     const SizedBox(width: 8),
 
                     // Update Profile Button
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.primaryOrange),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.edit_square,
-                            color: AppColors.primaryOrange,
-                            size: 14,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ProfileEditScreen(
+                                  currentName: widget.studentName,
+                                  currentEmail:
+                                      'student@schoolwala.com', // Placeholder
+                                ),
                           ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'Update Profile',
-                            style: TextStyle(
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.primaryOrange),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.edit_square,
                               color: AppColors.primaryOrange,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              size: 14,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Update Profile',
+                              style: TextStyle(
+                                color: AppColors.primaryOrange,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
