@@ -137,195 +137,220 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Image or Icon could go here
-              Center(
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryOrange.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.lock_reset,
-                    size: 40,
-                    color: AppColors.primaryOrange,
-                  ),
-                ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: ShaderMask(
+              shaderCallback: (rect) {
+                return const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.white],
+                ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
+              },
+              blendMode: BlendMode.dstIn,
+              child: Image.asset(
+                'assets/images/1.jpeg',
+                fit: BoxFit.cover,
+                height: 400,
               ),
-              const SizedBox(height: 30),
-
-              Center(
-                child: Text(
-                  _currentStep == 0
-                      ? 'Reset Password'
-                      : _currentStep == 1
-                      ? 'Enter OTP'
-                      : 'New Password',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.darkNavy,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  _currentStep == 0
-                      ? 'Enter your email to receive an OTP'
-                      : _currentStep == 1
-                      ? 'Enter the 4-digit code sent to your email'
-                      : 'Create a new secure password',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textGray,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              if (_currentStep == 0) ...[
-                // Step 1: Email
-                CustomTextField(
-                  controller: _emailController,
-                  label: 'Email Address',
-                  hintText: 'Enter your email',
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: Icons.email_outlined,
-                ),
-                const SizedBox(height: 30),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: SizedBox(
-                    width: 120,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleSendOtp,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryOrange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 0,
-                          horizontal: 16,
-                        ),
-                        minimumSize: const Size(0, 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        elevation: 2,
-                      ),
-                      child:
-                          _isLoading
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Text(
-                                'Send OTP',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                    ),
-                  ),
-                ),
-              ] else if (_currentStep == 1) ...[
-                // Step 2: OTP
-                CustomTextField(
-                  controller: _otpController,
-                  label: 'OTP Code',
-                  hintText: 'Enter 4-digit OTP',
-                  keyboardType: TextInputType.number,
-                  prefixIcon: Icons.pin_outlined,
-                ),
-                const SizedBox(height: 30),
-                CustomButton(
-                  text: 'Verify & Continue',
-                  onPressed:
-                      _isLoading
-                          ? () {}
-                          : _handleVerifyOtp, // Disable button while loading is handled inside CustomButton usually? CustomButton implementation might vary, but assuming standard callback
-                  // Note: CustomButton might not support loading state directly based on shared code, but we pass the function.
-                  // If CustomButton doesn't support disabled state via external var easily without rebuild, we rely on logic.
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _currentStep = 0;
-                      });
-                    },
-                    child: const Text(
-                      'Change Email',
-                      style: TextStyle(color: AppColors.textGray),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                // Step 3: New Password
-                CustomTextField(
-                  controller: _passwordController,
-                  label: 'New Password',
-                  hintText: '••••••••',
-                  obscureText: _obscurePassword,
-                  prefixIcon: Icons.lock_outline,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: AppColors.textGray,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  controller: _confirmPasswordController,
-                  label: 'Confirm Password',
-                  hintText: '••••••••',
-                  obscureText: _obscureConfirmPassword,
-                  prefixIcon: Icons.lock_outline,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: AppColors.textGray,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 30),
-                CustomButton(
-                  text: 'Change Password',
-                  onPressed: _isLoading ? () {} : _handleChangePassword,
-                ),
-              ],
-            ],
+            ),
           ),
-        ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Image or Icon could go here
+                  Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryOrange.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock_reset,
+                        size: 40,
+                        color: AppColors.primaryOrange,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  Center(
+                    child: Text(
+                      _currentStep == 0
+                          ? 'Reset Password'
+                          : _currentStep == 1
+                          ? 'Enter OTP'
+                          : 'New Password',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkNavy,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      _currentStep == 0
+                          ? 'Enter your email to receive an OTP'
+                          : _currentStep == 1
+                          ? 'Enter the 4-digit code sent to your email'
+                          : 'Create a new secure password',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textGray,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  if (_currentStep == 0) ...[
+                    // Step 1: Email
+                    CustomTextField(
+                      controller: _emailController,
+                      label: 'Email Address',
+                      hintText: 'Enter your email',
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icons.email_outlined,
+                    ),
+                    const SizedBox(height: 30),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: SizedBox(
+                        width: 120,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleSendOtp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryOrange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 0,
+                              horizontal: 16,
+                            ),
+                            minimumSize: const Size(0, 40),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 2,
+                          ),
+                          child:
+                              _isLoading
+                                  ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Text(
+                                    'Send OTP',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                        ),
+                      ),
+                    ),
+                  ] else if (_currentStep == 1) ...[
+                    // Step 2: OTP
+                    CustomTextField(
+                      controller: _otpController,
+                      label: 'OTP Code',
+                      hintText: 'Enter 4-digit OTP',
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.pin_outlined,
+                    ),
+                    const SizedBox(height: 30),
+                    CustomButton(
+                      text: 'Verify & Continue',
+                      onPressed:
+                          _isLoading
+                              ? () {}
+                              : _handleVerifyOtp, // Disable button while loading is handled inside CustomButton usually? CustomButton implementation might vary, but assuming standard callback
+                      // Note: CustomButton might not support loading state directly based on shared code, but we pass the function.
+                      // If CustomButton doesn't support disabled state via external var easily without rebuild, we rely on logic.
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _currentStep = 0;
+                          });
+                        },
+                        child: const Text(
+                          'Change Email',
+                          style: TextStyle(color: AppColors.textGray),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    // Step 3: New Password
+                    CustomTextField(
+                      controller: _passwordController,
+                      label: 'New Password',
+                      hintText: '••••••••',
+                      obscureText: _obscurePassword,
+                      prefixIcon: Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.textGray,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _confirmPasswordController,
+                      label: 'Confirm Password',
+                      hintText: '••••••••',
+                      obscureText: _obscureConfirmPassword,
+                      prefixIcon: Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.textGray,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    CustomButton(
+                      text: 'Change Password',
+                      onPressed: _isLoading ? () {} : _handleChangePassword,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
