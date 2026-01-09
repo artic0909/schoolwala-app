@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 import 'myclass_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -98,12 +99,8 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _handleForgotPassword() {
-    // Handle forgot password logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Forgot password functionality to be implemented'),
-        backgroundColor: AppColors.textGray,
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
     );
   }
 
