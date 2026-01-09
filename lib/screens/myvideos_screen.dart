@@ -3,6 +3,7 @@ import '../constants/app_constants.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/myclass_screen.dart';
 import '../screens/playvideo_screen.dart';
+import '../screens/practice_test_screen.dart';
 
 class MyVideosScreen extends StatefulWidget {
   final ChapterData chapter;
@@ -56,12 +57,9 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
   }
 
   void _handlePracticeTest(VideoData video) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening practice test for: ${video.title}'),
-        backgroundColor: const Color(0xFF4CAF50),
-        duration: const Duration(seconds: 1),
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PracticeTestScreen()),
     );
   }
 
