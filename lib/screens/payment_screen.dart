@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -23,7 +25,93 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final _classController = TextEditingController();
   final _amountController = TextEditingController(text: '₹12.00');
 
-  String? _uploadedScreenshot;
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to pick image')));
+      }
+    }
+  }
+
+  void _showImageSourceOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(20),
+            height: 160,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Upload Screenshot',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkNavy,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _pickImage(ImageSource.camera);
+                        },
+                        child: const Column(
+                          children: [
+                            Icon(
+                              Icons.camera_alt,
+                              size: 30,
+                              color: AppColors.primaryOrange,
+                            ),
+                            SizedBox(height: 8),
+                            Text('Camera'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _pickImage(ImageSource.gallery);
+                        },
+                        child: const Column(
+                          children: [
+                            Icon(
+                              Icons.photo_library,
+                              size: 30,
+                              color: AppColors.primaryOrange,
+                            ),
+                            SizedBox(height: 8),
+                            Text('Gallery'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+    );
+  }
 
   @override
   void initState() {
@@ -343,24 +431,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                               const SizedBox(height: 8),
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _uploadedScreenshot =
-                                        "screenshot_mock.jpg"; // Mock upload
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Screenshot uploaded successfully (Mock)',
-                                      ),
-                                    ),
-                                  );
-                                },
+                                onTap: _showImageSourceOptions,
                                 child: Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 20,
-                                  ),
+                                  height: 180,
                                   decoration: BoxDecoration(
                                     border: Border.all(
                                       color: AppColors.inputBorder,
@@ -370,34 +444,47 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     color: Colors.white,
                                   ),
                                   child:
-                                      _uploadedScreenshot != null
-                                          ? Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                      _imageFile != null
+                                          ? Stack(
+                                            fit: StackFit.expand,
                                             children: [
-                                              const Icon(
-                                                Icons.check_circle,
-                                                color: Colors.green,
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(11),
+                                                child: Image.file(
+                                                  _imageFile!,
+                                                  fit: BoxFit.cover,
+                                                ),
                                               ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'Screenshot Uploaded',
-                                                style: TextStyle(
-                                                  color: Colors.green[700],
-                                                  fontWeight: FontWeight.w500,
+                                              Center(
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black
+                                                        .withOpacity(0.5),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.edit,
+                                                    color: Colors.white,
+                                                    size: 24,
+                                                  ),
                                                 ),
                                               ),
                                             ],
                                           )
-                                          : Row(
+                                          : Column(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             children: [
                                               Icon(
                                                 Icons.cloud_upload_outlined,
                                                 color: AppColors.textGray,
+                                                size: 32,
                                               ),
-                                              const SizedBox(width: 8),
+                                              const SizedBox(height: 8),
                                               Text(
                                                 'Click to upload screenshot of payment',
                                                 style: TextStyle(
@@ -430,7 +517,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             child: ElevatedButton(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
-                                  if (_uploadedScreenshot == null) {
+                                  if (_imageFile == null) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
