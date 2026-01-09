@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
@@ -25,9 +27,30 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to pick image')));
+      }
+    }
+  }
 
   // Selected Interests/Showcase
   final List<String> _allInterests = [
@@ -181,8 +204,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           color: AppColors.primaryOrange.withOpacity(0.5),
                           width: 4,
                         ),
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/profile.jpg'),
+                        image: DecorationImage(
+                          image:
+                              _imageFile != null
+                                  ? FileImage(_imageFile!) as ImageProvider
+                                  : const AssetImage(
+                                    'assets/images/profile.jpg',
+                                  ),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -218,16 +246,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                             child: InkWell(
                                               onTap: () {
                                                 Navigator.pop(context);
-                                                // Simulate Camera pick
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      'Opening Camera...',
-                                                    ),
-                                                  ),
-                                                );
+                                                _pickImage(ImageSource.camera);
                                               },
                                               child: const Column(
                                                 children: [
@@ -247,16 +266,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                             child: InkWell(
                                               onTap: () {
                                                 Navigator.pop(context);
-                                                // Simulate Gallery pick
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      'Opening Gallery...',
-                                                    ),
-                                                  ),
-                                                );
+                                                _pickImage(ImageSource.gallery);
                                               },
                                               child: const Column(
                                                 children: [
