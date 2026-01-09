@@ -4,6 +4,7 @@ import '../widgets/chapter_list_item.dart';
 import '../screens/myclass_screen.dart';
 import '../screens/myvideos_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/payment_screen.dart';
 
 class MyChaptersScreen extends StatefulWidget {
   final SubjectData subject;
@@ -33,18 +34,33 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
   ];
 
   void _handleChapterTap(ChapterData chapter) {
-    // Navigate to video lessons screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => MyVideosScreen(
-              chapter: chapter,
-              subject: widget.subject,
-              studentName: widget.studentName,
-            ),
-      ),
-    );
+    // Check if it's the first chapter (number 1)
+    if (chapter.number == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => PaymentScreen(
+                studentName: widget.studentName,
+                className:
+                    'Class 8', // You might want to pass this dynamically if available
+              ),
+        ),
+      );
+    } else {
+      // Navigate to video lessons screen for other chapters
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => MyVideosScreen(
+                chapter: chapter,
+                subject: widget.subject,
+                studentName: widget.studentName,
+              ),
+        ),
+      );
+    }
   }
 
   @override
