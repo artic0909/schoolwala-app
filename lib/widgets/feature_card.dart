@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_constants.dart';
 import '../screens/myclass_screen.dart';
 
 class FeatureCard extends StatelessWidget {
