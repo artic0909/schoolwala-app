@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../services/auth_service.dart';
+import '../services/common_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -49,24 +50,47 @@ class _SignUpScreenState extends State<SignUpScreen>
     'assets/images/7.jpeg',
   ];
 
-  final List<String> _classes = [
-    'Class 1',
-    'Class 2',
-    'Class 3',
-    'Class 4',
-    'Class 5',
-    'Class 6',
-    'Class 7',
-    'Class 8',
-    'Class 9',
-    'Class 10',
-  ];
+  List<Map<String, dynamic>> _classes = [];
+  bool _isLoadingClasses = true;
 
   @override
   void initState() {
     super.initState();
+    _fetchClasses();
     _setupArrowAnimation();
     _startCarouselAutoPlay();
+  }
+
+  Future<void> _fetchClasses() async {
+    try {
+      final classes = await CommonService.getClasses();
+      if (mounted) {
+        setState(() {
+          // We expect a list of objects or maps
+          if (classes.isNotEmpty) {
+            _classes =
+                classes.map((e) {
+                  if (e is Map) {
+                    return {
+                      'id': e['id'].toString(),
+                      'name': e['name'].toString(),
+                    };
+                  }
+                  // Fallback if it's just strings (unlikely given the error)
+                  return {'id': e.toString(), 'name': e.toString()};
+                }).toList();
+          }
+          _isLoadingClasses = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingClasses = false;
+          _classes = []; // Use empty list on error
+        });
+      }
+    }
   }
 
   void _setupArrowAnimation() {
@@ -143,8 +167,8 @@ class _SignUpScreenState extends State<SignUpScreen>
         'email': _emailController.text,
         'mobile': _mobileController.text,
         'student_name': _childNameController.text,
-        'student_age': _childAgeController.text,
-        'class': _selectedClass ?? '',
+        'age': _childAgeController.text,
+        'class_id': _selectedClass ?? '',
         'password': _passwordController.text,
         'password_confirmation': _confirmPasswordController.text,
       };
@@ -528,60 +552,69 @@ class _SignUpScreenState extends State<SignUpScreen>
                 // Select Class Dropdown
                 const Text('Select Class', style: AppTextStyles.inputLabel),
                 const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: _selectedClass,
-                  decoration: InputDecoration(
-                    hintText: 'Choose Class',
-                    hintStyle: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textGray.withOpacity(0.5),
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.school_outlined,
-                      color: AppColors.textGray,
-                      size: 22,
-                    ),
-                    filled: true,
-                    fillColor: AppColors.inputBackground,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: AppColors.primaryOrange,
-                        width: 2,
+                _isLoadingClasses
+                    ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
                       ),
+                    )
+                    : DropdownButtonFormField<String>(
+                      value: _selectedClass,
+                      decoration: InputDecoration(
+                        hintText: 'Choose Class',
+                        hintStyle: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textGray.withOpacity(0.5),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.school_outlined,
+                          color: AppColors.textGray,
+                          size: 22,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.inputBackground,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.primaryOrange,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      items:
+                          _classes.map<DropdownMenuItem<String>>((
+                            Map<String, dynamic> classItem,
+                          ) {
+                            return DropdownMenuItem<String>(
+                              value: classItem['id'],
+                              child: Text(classItem['name']),
+                            );
+                          }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedClass = newValue;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please select a class';
+                        }
+                        return null;
+                      },
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                  items:
-                      _classes.map((String classItem) {
-                        return DropdownMenuItem<String>(
-                          value: classItem,
-                          child: Text(classItem),
-                        );
-                      }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedClass = newValue;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Please select a class';
-                    }
-                    return null;
-                  },
-                ),
 
                 const SizedBox(height: 16),
 
