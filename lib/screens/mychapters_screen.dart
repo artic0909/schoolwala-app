@@ -41,8 +41,16 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     final result = await StudentService.getChapters(widget.subject.id);
     if (result['success'] && mounted) {
       try {
-        final data = result['data'];
-        final List<dynamic> list = data['chapters'] ?? [];
+        final body = result['data'];
+        Map<String, dynamic> subjectData = {};
+
+        if (body is Map && body.containsKey('data')) {
+          subjectData = Map<String, dynamic>.from(body['data']);
+        } else if (body is Map) {
+          subjectData = Map<String, dynamic>.from(body);
+        }
+
+        final List<dynamic> list = subjectData['chapters'] ?? [];
 
         _chapters =
             list.asMap().entries.map((entry) {
