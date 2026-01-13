@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
+import '../services/auth_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -46,13 +47,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    final result = await AuthService.forgotPassword(_emailController.text);
 
     setState(() {
       _isLoading = false;
-      _currentStep = 1;
     });
+
+    if (result['success']) {
+      setState(() {
+        _currentStep = 1;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP sent to your email!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to send OTP'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _handleVerifyOtp() async {
@@ -67,13 +89,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    final result = await AuthService.verifyOTP(
+      _emailController.text,
+      _otpController.text,
+    );
 
     setState(() {
       _isLoading = false;
-      _currentStep = 2;
     });
+
+    if (result['success']) {
+      setState(() {
+        _currentStep = 2;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP verified successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Invalid OTP'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _handleChangePassword() async {
@@ -95,21 +141,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    final result = await AuthService.resetPassword(
+      _emailController.text,
+      _otpController.text,
+      _passwordController.text,
+      _confirmPasswordController.text,
+    );
 
     setState(() {
       _isLoading = false;
     });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password changed successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.of(context).pop();
+    if (result['success']) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password changed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to reset password'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -269,7 +330,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     CustomTextField(
                       controller: _otpController,
                       label: 'OTP Code',
-                      hintText: 'Enter 4-digit OTP',
+                      hintText: 'Enter The OTP',
                       keyboardType: TextInputType.number,
                       prefixIcon: Icons.pin_outlined,
                     ),

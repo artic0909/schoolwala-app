@@ -4,6 +4,8 @@ import '../screens/mychapters_screen.dart';
 import '../screens/myclass_screen.dart';
 import '../screens/playvideo_screen.dart';
 import '../screens/practice_test_screen.dart';
+import '../screens/profile_screen.dart';
+import '../services/auth_service.dart';
 
 class MyVideosScreen extends StatefulWidget {
   final ChapterData chapter;
@@ -22,6 +24,27 @@ class MyVideosScreen extends StatefulWidget {
 }
 
 class _MyVideosScreenState extends State<MyVideosScreen> {
+  String? _profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final result = await AuthService.getProfile();
+    if (result['success'] && mounted) {
+      final profile = result['data']['profile'];
+      if (profile['profile_image'] != null) {
+        setState(() {
+          _profileImageUrl =
+              'https://schoolwala.info/storage/${profile['profile_image']}';
+        });
+      }
+    }
+  }
+
   // Sample videos data - will be dynamic from backend
   final List<VideoData> videos = [
     VideoData(
@@ -37,11 +60,10 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
   ];
 
   void _handleProfileTap() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile screen to be implemented'),
-        backgroundColor: AppColors.textGray,
-        duration: Duration(seconds: 1),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(studentName: widget.studentName),
       ),
     );
   }
@@ -188,12 +210,21 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: AppColors.orangeGradient,
-                            ),
                             shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primaryOrange,
+                              width: 2,
+                            ),
+                            image: DecorationImage(
+                              image:
+                                  _profileImageUrl != null
+                                      ? NetworkImage(_profileImageUrl!)
+                                          as ImageProvider
+                                      : const AssetImage(
+                                        'assets/images/profile.jpg',
+                                      ),
+                              fit: BoxFit.cover,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.primaryOrange.withOpacity(0.3),
@@ -201,11 +232,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                                 offset: const Offset(0, 4),
                               ),
                             ],
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 26,
                           ),
                         ),
                       ),
