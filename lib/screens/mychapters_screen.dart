@@ -29,6 +29,9 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
   List<ChapterData> _chapters = [];
   bool _isLoadingChapters = true;
   String? _chaptersError;
+  int _totalChapters = 0;
+  int _totalVideos = 0;
+  int _totalActivities = 0;
 
   @override
   void initState() {
@@ -67,6 +70,15 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
               );
             }).toList();
 
+        // Calculate totals
+        _totalChapters = _chapters.length;
+        _totalVideos = _chapters.fold(
+          0,
+          (sum, chapter) => sum + chapter.videoCount,
+        );
+        _totalActivities =
+            _totalVideos; // As per requirement: total activities == total videos
+
         if (_chapters.isEmpty) {
           _chaptersError = 'No chapters found for this subject.';
         }
@@ -103,14 +115,12 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
 
   // Sample chapters data - will be dynamic from backend
   final List<ChapterData> chapters = [
-    ChapterData(number: 1, title: 'বোঝাপড়া', videoCount: 1),
-    ChapterData(number: 2, title: 'অদ্ভুত আভিধেয়তা', videoCount: 1),
-    ChapterData(number: 3, title: 'চন্দ্রগুপ্ত', videoCount: 1),
-    ChapterData(number: 4, title: 'বনভোজনের ব্যাপার', videoCount: 1),
-    ChapterData(number: 5, title: 'পথের দাবী', videoCount: 1),
-    ChapterData(number: 6, title: 'আমরা', videoCount: 1),
-    ChapterData(number: 7, title: 'কোনি', videoCount: 1),
-    ChapterData(number: 8, title: 'মানুষ মুখো', videoCount: 1),
+    ChapterData(number: 1, title: 'Chapter 1', videoCount: 1),
+    ChapterData(number: 2, title: 'Chapter 2', videoCount: 1),
+    ChapterData(number: 3, title: 'Chapter 3', videoCount: 1),
+    ChapterData(number: 4, title: 'Chapter 4', videoCount: 1),
+    ChapterData(number: 5, title: 'Chapter 5', videoCount: 1),
+    ChapterData(number: 6, title: 'Chapter 6', videoCount: 1),
   ];
 
   void _handleChapterTap(ChapterData chapter) {
@@ -402,11 +412,22 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                             // Stats row
                             Row(
                               children: [
-                                _buildStatCard('43', 'Chapters'),
+                                _buildStatCard(
+                                  _isLoadingChapters ? '-' : '$_totalChapters',
+                                  'Chapters',
+                                ),
                                 const SizedBox(width: 12),
-                                _buildStatCard('23+', 'Videos'),
+                                _buildStatCard(
+                                  _isLoadingChapters ? '-' : '$_totalVideos',
+                                  'Videos',
+                                ),
                                 const SizedBox(width: 12),
-                                _buildStatCard('23+', 'Activities'),
+                                _buildStatCard(
+                                  _isLoadingChapters
+                                      ? '-'
+                                      : '$_totalActivities',
+                                  'Activities',
+                                ),
                               ],
                             ),
                           ],

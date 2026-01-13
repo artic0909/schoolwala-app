@@ -6,6 +6,7 @@ import '../screens/playvideo_screen.dart';
 import '../screens/practice_test_screen.dart';
 import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
+import '../services/student_service.dart';
 
 class MyVideosScreen extends StatefulWidget {
   final ChapterData chapter;
@@ -26,10 +27,16 @@ class MyVideosScreen extends StatefulWidget {
 class _MyVideosScreenState extends State<MyVideosScreen> {
   String? _profileImageUrl;
 
+  // Dynamic videos loaded from backend
+  List<VideoData> _videos = [];
+  bool _isLoadingVideos = true;
+  String? _videosError;
+
   @override
   void initState() {
     super.initState();
     _loadProfileImage();
+    _loadVideos();
   }
 
   Future<void> _loadProfileImage() async {
@@ -45,19 +52,51 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
     }
   }
 
-  // Sample videos data - will be dynamic from backend
-  final List<VideoData> videos = [
-    VideoData(
-      id: '1',
-      title: 'Midnight Express | Part 1 | Blossoms | Class 8 | Fully Explained',
-      description:
-          'এই ভিডিওতে Class 8 Blossoms পাঠ্যবইয়ের অন্যতম আকর্ষণীয় পাঠ Midnight Express......',
-      thumbnailPath: 'assets/images/thumbnail.jpg',
-      duration: '13:21',
-      hasNotes: true,
-      hasPracticeTest: true,
-    ),
-  ];
+  Future<void> _loadVideos() async {
+    final result = await StudentService.getVideos(widget.chapter.id);
+    if (result['success'] && mounted) {
+      try {
+        final data = result['data'];
+        final List<dynamic> list = data['videos'] ?? [];
+
+        _videos =
+            list.map((item) {
+              return VideoData(
+                id: item['id']?.toString() ?? '',
+                title: item['title'] ?? 'Untitled Video',
+                description: item['description'] ?? 'No description available.',
+                thumbnailPath:
+                    'assets/images/thumbnail.jpg', // Placeholder as backend missing thumbnail
+                duration:
+                    item['duration'] ?? '10:00', // Placeholder or from backend
+                hasNotes:
+                    item['has_notes'] ?? false, // Check backend field name
+                hasPracticeTest:
+                    item['has_practice_test'] ?? false, // Check backend
+                videoUrl: item['video_url'] ?? '',
+              );
+            }).toList();
+
+        if (_videos.isEmpty) {
+          _videosError = 'No videos found for this chapter.';
+        }
+
+        setState(() {
+          _isLoadingVideos = false;
+        });
+      } catch (e) {
+        setState(() {
+          _videosError = 'Error parsing videos: $e';
+          _isLoadingVideos = false;
+        });
+      }
+    } else {
+      setState(() {
+        _videosError = result['message'] ?? 'Failed to load videos';
+        _isLoadingVideos = false;
+      });
+    }
+  }
 
   void _handleProfileTap() {
     Navigator.push(
@@ -94,7 +133,9 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
             (context) => PlayVideoScreen(
               video: video,
               videoUrl:
-                  'https://www.youtube.com/embed/k0NMKKLGUHw?si=rHvRyrut5n3nmnf7',
+                  video.videoUrl.isNotEmpty
+                      ? video.videoUrl
+                      : 'https://www.youtube.com/embed/k0NMKKLGUHw?si=rHvRyrut5n3nmnf7',
             ),
       ),
     );
@@ -351,9 +392,17 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                             // Stats row
                             Row(
                               children: [
-                                _buildStatCard('1', 'Run Video Lessons'),
+                                _buildStatCard(
+                                  _isLoadingVideos ? '-' : '${_videos.length}',
+                                  'Run Video Lessons',
+                                ),
                                 const SizedBox(width: 12),
-                                _buildStatCard('1', 'Practice Activities'),
+                                _buildStatCard(
+                                  _isLoadingVideos
+                                      ? '-'
+                                      : '${_videos.where((v) => v.hasPracticeTest).length}',
+                                  'Practice Activities',
+                                ),
                               ],
                             ),
                           ],
@@ -382,18 +431,8 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Videos list
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: videos.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildVideoCard(videos[index]),
-                          );
-                        },
-                      ),
+                      // Videos list loading logic
+                      _buildVideoList(),
                     ],
                   ),
                 ),
@@ -402,6 +441,30 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildVideoList() {
+    if (_isLoadingVideos) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_videosError != null) {
+      return Center(child: Text(_videosError!));
+    }
+    if (_videos.isEmpty) {
+      return const Center(child: Text('No videos available'));
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _videos.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildVideoCard(_videos[index]),
+        );
+      },
     );
   }
 
@@ -680,6 +743,7 @@ class VideoData {
   final String duration;
   final bool hasNotes;
   final bool hasPracticeTest;
+  final String videoUrl;
 
   VideoData({
     required this.id,
@@ -689,5 +753,6 @@ class VideoData {
     required this.duration,
     required this.hasNotes,
     required this.hasPracticeTest,
+    required this.videoUrl,
   });
 }
