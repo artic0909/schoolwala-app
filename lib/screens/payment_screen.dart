@@ -36,10 +36,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final _phoneController = TextEditingController();
   final _classController = TextEditingController();
   final _amountController = TextEditingController();
+  String? _amount;
+  String? _qrCodeUrl;
+  String? _feeId;
 
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
+  bool _isLoadingFees = false;
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -142,7 +146,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       'email': _emailController.text,
       'phone': _phoneController.text,
       'class_id': widget.classId,
-      'fees_id': widget.feeId,
+      'fees_id': _feeId ?? widget.feeId, // Use fetched ID
       'subject_id': widget.subjectId,
     };
 
@@ -170,10 +174,57 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   void initState() {
     super.initState();
+    _amount = widget.amount;
+    _qrCodeUrl = widget.qrCodeUrl;
+    _feeId = widget.feeId;
+
     _studentNameController.text = widget.studentName;
     _classController.text = widget.className;
     _amountController.text = widget.amount;
     _loadUserData();
+    _fetchFeesInfo();
+  }
+
+  Future<void> _fetchFeesInfo() async {
+    setState(() => _isLoadingFees = true);
+    try {
+      final result = await StudentService.getPaymentInfo();
+      if (result['success'] && result['data'] != null) {
+        final data = result['data'];
+
+        // Update Class Name
+        final classInfo = data['class'];
+        if (classInfo != null && mounted) {
+          setState(() {
+            // Check for 'name' (used in ProfileScreen) or 'class_name'
+            String className =
+                classInfo['name'] ??
+                classInfo['class_name'] ??
+                widget.className;
+            _classController.text = className;
+          });
+        }
+
+        final fees = data['fees'];
+        if (fees != null && mounted) {
+          setState(() {
+            _amount = fees['amount']?.toString();
+            _amountController.text = _amount ?? '';
+            _feeId = fees['id']?.toString();
+
+            // USE BACKEND GENERATED FULL URL
+            _qrCodeUrl = fees['qrimage_url'];
+            debugPrint('QR Code URL from backend: $_qrCodeUrl');
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching fees info: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingFees = false);
+      }
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -184,7 +235,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
           setState(() {
             _emailController.text = user['email'] ?? '';
             _phoneController.text = user['phone'] ?? user['mobile'] ?? '';
-            // Update student name if not provided or just to be safe (optional, but requested "all field")
             _studentNameController.text =
                 user['student_name'] ?? widget.studentName;
           });
@@ -263,6 +313,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ],
               ),
             ),
+            if (_isLoadingFees)
+              const LinearProgressIndicator(
+                backgroundColor: AppColors.primaryOrange,
+                color: Colors.white,
+              ),
 
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -310,11 +365,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _buildDetailRow('Class:', widget.className),
+                        _buildDetailRow('Class:', _classController.text),
                         const Divider(color: Colors.white24, height: 24),
-                        _buildDetailRow('Student:', widget.studentName),
+                        _buildDetailRow('Student:', _studentNameController.text),
                         const Divider(color: Colors.white24, height: 24),
-                        _buildDetailRow('Amount:', widget.amount),
+                        _buildDetailRow('Amount:', _amount ?? widget.amount),
                       ],
                     ),
                   ),
@@ -367,23 +422,72 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             ],
                           ),
                           child:
-                              widget.qrCodeUrl != null &&
-                                      widget.qrCodeUrl!.isNotEmpty
+                              _qrCodeUrl != null && _qrCodeUrl!.isNotEmpty
                                   ? Image.network(
-                                    widget.qrCodeUrl!,
+                                    _qrCodeUrl!,
                                     width: 180,
                                     height: 180,
                                     fit: BoxFit.contain,
+                                    loadingBuilder: (
+                                      context,
+                                      child,
+                                      loadingProgress,
+                                    ) {
+                                      if (loadingProgress == null) return child;
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                          .expectedTotalBytes !=
+                                                      null
+                                                  ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      loadingProgress
+                                                          .expectedTotalBytes!
+                                                  : null,
+                                        ),
+                                      );
+                                    },
                                     errorBuilder: (context, error, stackTrace) {
-                                      debugPrint('Error loading QR: $error');
-                                      return _buildQrPlaceholder();
+                                      debugPrint(
+                                        'Error loading QR from URL: $_qrCodeUrl',
+                                      );
+                                      debugPrint('Error: $error');
+                                      return Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.error_outline,
+                                            size: 48,
+                                            color: Colors.red,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Failed to load QR code',
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'URL: $_qrCodeUrl',
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 10,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      );
                                     },
                                   )
                                   : _buildQrPlaceholder(),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          widget.amount,
+                          _amount ?? widget.amount,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
