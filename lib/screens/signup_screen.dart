@@ -3,6 +3,7 @@ import 'dart:async';
 import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
+import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -30,6 +31,7 @@ class _SignUpScreenState extends State<SignUpScreen>
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
+  bool _isLoading = false;
   String? _selectedClass;
 
   int _currentPage = 0;
@@ -120,7 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     super.dispose();
   }
 
-  void _handleSignUp() {
+  Future<void> _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
       if (!_agreeToTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -132,13 +134,48 @@ class _SignUpScreenState extends State<SignUpScreen>
         return;
       }
 
-      // Handle sign up logic here
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sign up functionality to be implemented'),
-          backgroundColor: AppColors.primaryOrange,
-        ),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+
+      final registerData = {
+        'parent_name': _parentNameController.text,
+        'email': _emailController.text,
+        'mobile': _mobileController.text,
+        'student_name': _childNameController.text,
+        'student_age': _childAgeController.text,
+        'class': _selectedClass ?? '',
+        'password': _passwordController.text,
+        'password_confirmation': _confirmPasswordController.text,
+      };
+
+      final result = await AuthService.register(registerData);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result['success']) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration Successful. Please Login.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Navigate back to login or dashboard
+          Navigator.of(context).pop(); // Pops back to login if came from there
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Registration Failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -666,7 +703,13 @@ class _SignUpScreenState extends State<SignUpScreen>
                 const SizedBox(height: 30),
 
                 // Sign Up Button
-                CustomButton(text: 'Sign Up', onPressed: _handleSignUp),
+                _isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryOrange,
+                      ),
+                    )
+                    : CustomButton(text: 'Sign Up', onPressed: _handleSignUp),
 
                 const SizedBox(height: 20),
 

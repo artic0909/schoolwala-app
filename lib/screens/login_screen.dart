@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'myclass_screen.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _rememberMe = false;
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   int _currentPage = 0;
   Timer? _carouselTimer;
@@ -70,31 +72,69 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // Extract name from email (before @)
-      final email = _emailController.text;
-      final studentName = email
-          .split('@')[0]
-          .replaceAll('.', ' ')
-          .split(' ')
-          .map(
-            (word) =>
-                word.isNotEmpty
-                    ? word[0].toUpperCase() + word.substring(1).toLowerCase()
-                    : '',
-          )
-          .join(' ');
+      setState(() {
+        _isLoading = true;
+      });
 
-      // Navigate to MyClass screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder:
-              (context) => MyClassScreen(
-                studentName: studentName.isNotEmpty ? studentName : 'Student',
-              ),
-        ),
-      );
+      final email = _emailController.text;
+      final password = _passwordController.text;
+
+      final result = await AuthService.login(email, password);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result['success']) {
+        // Extract name from email (before @)
+        // Ideally, name should come from API response
+        String studentName = 'Student';
+        if (result['data'] != null &&
+            result['data']['user'] != null &&
+            result['data']['user']['name'] != null) {
+          studentName = result['data']['user']['name'];
+        } else {
+          // Fallback to email extraction
+          studentName = email
+              .split('@')[0]
+              .replaceAll('.', ' ')
+              .split(' ')
+              .map(
+                (word) =>
+                    word.isNotEmpty
+                        ? word[0].toUpperCase() +
+                            word.substring(1).toLowerCase()
+                        : '',
+              )
+              .join(' ');
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login Successful'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Navigate to MyClass screen
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MyClassScreen(studentName: studentName),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Login Failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -423,7 +463,13 @@ class _LoginScreenState extends State<LoginScreen>
                 const SizedBox(height: 30),
 
                 // Sign in button
-                CustomButton(text: 'Sign In', onPressed: _handleLogin),
+                _isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryOrange,
+                      ),
+                    )
+                    : CustomButton(text: 'Sign In', onPressed: _handleLogin),
 
                 const SizedBox(height: 20),
 
