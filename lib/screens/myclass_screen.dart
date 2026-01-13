@@ -25,6 +25,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
   bool _isLoadingSubjects = true;
   String? _subjectsError;
   String _className = '';
+  Map<String, dynamic>? _feeDetails;
 
   @override
   void initState() {
@@ -52,10 +53,14 @@ class _MyClassScreenState extends State<MyClassScreen> {
       try {
         final data = result['data'];
         List<dynamic> list = [];
+        List<dynamic> fees = [];
 
         if (data is Map) {
           if (data.containsKey('name')) {
             _className = data['name']?.toString() ?? '';
+          }
+          if (data.containsKey('fees')) {
+            fees = data['fees'] ?? [];
           }
 
           if (data.containsKey('subjects')) {
@@ -67,12 +72,19 @@ class _MyClassScreenState extends State<MyClassScreen> {
             if (data['data'].containsKey('name')) {
               _className = data['data']['name']?.toString() ?? '';
             }
+            if (data['data'].containsKey('fees')) {
+              fees = data['data']['fees'] ?? [];
+            }
             list = data['data']['subjects'] ?? [];
           } else if (data.containsKey('data') && data['data'] is List) {
             list = data['data'];
           }
         } else if (data is List) {
           list = data;
+        }
+
+        if (fees.isNotEmpty) {
+          _feeDetails = fees[0];
         }
 
         // Predefined fallback assets for round-robin assignment
@@ -211,6 +223,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
             (context) => MyChaptersScreen(
               subject: subject,
               studentName: widget.studentName,
+              feeDetails: _feeDetails,
             ),
       ),
     );

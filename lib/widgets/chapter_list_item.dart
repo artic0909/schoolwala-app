@@ -33,7 +33,7 @@ class ChapterListItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top row with SL number
+          // Top row with SL number and Lock Icon
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -60,6 +60,16 @@ class ChapterListItem extends StatelessWidget {
                   ),
                 ),
               ),
+
+              if (chapter.isLocked)
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.lock, size: 16, color: Colors.red),
+                ),
             ],
           ),
 
@@ -100,7 +110,7 @@ class ChapterListItem extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Show Videos button
+          // Show Videos / Unlock button
           GestureDetector(
             onTap: onTap,
             child: Container(
@@ -110,25 +120,40 @@ class ChapterListItem extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: AppColors.orangeGradient,
+                  colors:
+                      chapter.isLocked
+                          ? [const Color(0xFFFF5252), const Color(0xFFD32F2F)]
+                          : AppColors.orangeGradient,
                 ),
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryOrange.withOpacity(0.3),
+                    color: (chapter.isLocked
+                            ? Colors.red
+                            : AppColors.primaryOrange)
+                        .withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: const Text(
-                'Show Videos',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (chapter.isLocked) ...[
+                    const Icon(Icons.lock_open, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    chapter.isLocked ? 'Unlock Now' : 'Show Videos',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

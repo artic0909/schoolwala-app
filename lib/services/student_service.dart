@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import 'auth_service.dart';
@@ -218,20 +219,38 @@ class StudentService {
   }
 
   // Store Payment
+  // Store Payment with Image Upload
   static Future<Map<String, dynamic>> storePayment(
-    Map<String, dynamic> paymentData,
+    Map<String, String> fields,
+    File imageFile,
   ) async {
     try {
       final headers = await AuthService.getAuthHeaders();
-      final response = await http.post(
-        Uri.parse(ApiConstants.paymentStoreEndpoint),
-        body: paymentData,
-        headers: headers,
-      );
+      final uri = Uri.parse(ApiConstants.paymentStoreEndpoint);
+
+      var request = http.MultipartRequest('POST', uri);
+      request.headers.addAll(headers);
+
+      // Add fields
+      fields.forEach((key, value) {
+        request.fields[key] = value;
+      });
+
+      // Add image
+      var pic = await http.MultipartFile.fromPath('receipt', imageFile.path);
+      request.files.add(pic);
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': json.decode(response.body)};
       }
-      return {'success': false, 'message': 'Failed to store payment'};
+      return {
+        'success': false,
+        'message':
+            'Failed to store payment: ${response.statusCode} ${response.body}',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Connection error: $e'};
     }

@@ -61,19 +61,22 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
 
         _videos =
             list.map((item) {
+              String thumbnail = 'assets/images/thumbnail.jpg';
+              if (item['video_thumbnail'] != null) {
+                thumbnail =
+                    'https://schoolwala.info/storage/${item['video_thumbnail']}';
+              }
+
               return VideoData(
                 id: item['id']?.toString() ?? '',
-                title: item['title'] ?? 'Untitled Video',
-                description: item['description'] ?? 'No description available.',
-                thumbnailPath:
-                    'assets/images/thumbnail.jpg', // Placeholder as backend missing thumbnail
-                duration:
-                    item['duration'] ?? '10:00', // Placeholder or from backend
-                hasNotes:
-                    item['has_notes'] ?? false, // Check backend field name
-                hasPracticeTest:
-                    item['has_practice_test'] ?? false, // Check backend
-                videoUrl: item['video_url'] ?? '',
+                title: item['video_title'] ?? 'Untitled Video',
+                description:
+                    item['video_description'] ?? 'No description available.',
+                thumbnailPath: thumbnail,
+                duration: item['duration'] ?? '10:00',
+                hasNotes: item['has_notes'] ?? false,
+                hasPracticeTest: item['has_practice_test'] ?? false,
+                videoUrl: item['video_link'] ?? '',
               );
             }).toList();
 

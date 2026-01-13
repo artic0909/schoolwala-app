@@ -11,11 +11,13 @@ import '../services/student_service.dart';
 class MyChaptersScreen extends StatefulWidget {
   final SubjectData subject;
   final String studentName;
+  final Map<String, dynamic>? feeDetails;
 
   const MyChaptersScreen({
     super.key,
     required this.subject,
     required this.studentName,
+    this.feeDetails,
   });
 
   @override
@@ -67,6 +69,8 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                 videoCount:
                     item['videos_count'] ??
                     0, // Using count from updated backend
+                isLocked:
+                    item['is_locked'] ?? false, // Map is_locked from backend
               );
             }).toList();
 
@@ -113,19 +117,9 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     }
   }
 
-  // Sample chapters data - will be dynamic from backend
-  final List<ChapterData> chapters = [
-    ChapterData(number: 1, title: 'Chapter 1', videoCount: 1),
-    ChapterData(number: 2, title: 'Chapter 2', videoCount: 1),
-    ChapterData(number: 3, title: 'Chapter 3', videoCount: 1),
-    ChapterData(number: 4, title: 'Chapter 4', videoCount: 1),
-    ChapterData(number: 5, title: 'Chapter 5', videoCount: 1),
-    ChapterData(number: 6, title: 'Chapter 6', videoCount: 1),
-  ];
-
   void _handleChapterTap(ChapterData chapter) {
-    // Check if it's the first chapter (number 1)
-    if (chapter.number == 1) {
+    // Check if chapter is locked
+    if (chapter.isLocked) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -133,12 +127,20 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
               (context) => PaymentScreen(
                 studentName: widget.studentName,
                 className:
-                    'Class 8', // You might want to pass this dynamically if available
+                    'Class 8', // Could be dynamic if we passed className or feeDetails class_id
+                feeId: widget.feeDetails?['id']?.toString() ?? '',
+                amount: widget.feeDetails?['amount']?.toString() ?? '0',
+                subjectId: widget.subject.id,
+                classId: widget.feeDetails?['class_id']?.toString() ?? '',
+                qrCodeUrl:
+                    widget.feeDetails?['qrimage'] != null
+                        ? 'https://schoolwala.info/storage/${widget.feeDetails!['qrimage']}'
+                        : null,
               ),
         ),
       );
     } else {
-      // Navigate to video lessons screen for other chapters
+      // Navigate to video lessons screen for unlocked chapters
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -539,6 +541,8 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     );
   }
 
+  // ... existing stat card ...
+
   Widget _buildStatCard(String value, String label) {
     return Expanded(
       child: Container(
@@ -581,11 +585,13 @@ class ChapterData {
   final int number;
   final String title;
   final int videoCount;
+  final bool isLocked;
 
   ChapterData({
     this.id = '',
     required this.number,
     required this.title,
     required this.videoCount,
+    this.isLocked = false,
   });
 }

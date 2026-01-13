@@ -2,15 +2,26 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
+import '../services/student_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String studentName;
   final String className;
+  final String feeId;
+  final String amount;
+  final String subjectId;
+  final String classId;
+  final String? qrCodeUrl;
 
   const PaymentScreen({
     super.key,
     required this.studentName,
     this.className = 'Class 8',
+    required this.feeId,
+    required this.amount,
+    required this.subjectId,
+    required this.classId,
+    this.qrCodeUrl,
   });
 
   @override
@@ -23,10 +34,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _classController = TextEditingController();
-  final _amountController = TextEditingController(text: '₹12.00');
+  final _amountController = TextEditingController();
 
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  bool _isSubmitting = false;
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -113,13 +125,54 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  Future<void> _submitPayment() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please upload payment screenshot')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final fields = {
+      'student_name': _studentNameController.text,
+      'email': _emailController.text,
+      'phone': _phoneController.text,
+      'class_id': widget.classId,
+      'fees_id': widget.feeId,
+      'subject_id': widget.subjectId,
+    };
+
+    final result = await StudentService.storePayment(fields, _imageFile!);
+
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment details submitted successfully!'),
+          ),
+        );
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pop(context);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Submission failed')),
+        );
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _studentNameController.text = widget.studentName;
     _classController.text = widget.className;
-    // Pre-fill email for demo/testing as seen in design
-    _emailController.text = "gopii@gmail.com";
+    _amountController.text = widget.amount;
+    // Pre-fill email/phone if available from profile could be done here
   }
 
   @override
@@ -241,7 +294,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         const Divider(color: Colors.white24, height: 24),
                         _buildDetailRow('Student:', widget.studentName),
                         const Divider(color: Colors.white24, height: 24),
-                        _buildDetailRow('Email:', 'gopii@gmail.com'),
+                        _buildDetailRow('Amount:', widget.amount),
                       ],
                     ),
                   ),
@@ -293,31 +346,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                             ],
                           ),
-                          child: Image.asset(
-                            'assets/images/qr.jpg',
-                            width: 180,
-                            height: 180,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 180,
-                                height: 180,
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.qr_code,
-                                    size: 64,
-                                    color: Colors.grey,
+                          child:
+                              widget.qrCodeUrl != null &&
+                                      widget.qrCodeUrl!.isNotEmpty
+                                  ? Image.network(
+                                    widget.qrCodeUrl!,
+                                    width: 180,
+                                    height: 180,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildQrPlaceholder();
+                                    },
+                                  )
+                                  : Image.asset(
+                                    'assets/images/qr.jpg',
+                                    width: 180,
+                                    height: 180,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildQrPlaceholder();
+                                    },
                                   ),
-                                ),
-                              );
-                            },
-                          ),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          '₹12.00',
-                          style: TextStyle(
+                        Text(
+                          widget.amount,
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF2E7D32), // Green color for money
@@ -515,34 +569,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  if (_imageFile == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Please upload payment screenshot',
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  // Submit logic here
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Payment details submitted successfully!',
-                                      ),
-                                    ),
-                                  );
-                                  Future.delayed(
-                                    const Duration(seconds: 1),
-                                    () {
-                                      Navigator.pop(context);
-                                    },
-                                  );
-                                }
-                              },
+                              onPressed: _isSubmitting ? null : _submitPayment,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryOrange,
                                 shape: RoundedRectangleBorder(
@@ -552,15 +579,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 shadowColor: AppColors.primaryOrange
                                     .withOpacity(0.4),
                               ),
-                              child: const Text(
-                                'Submit Payment Details',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
+                              child:
+                                  _isSubmitting
+                                      ? const CircularProgressIndicator(
+                                        color: Colors.white,
+                                      )
+                                      : const Text(
+                                        'Submit Payment Details',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
                             ),
                           ),
                         ],
@@ -572,6 +604,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildQrPlaceholder() {
+    return Container(
+      width: 180,
+      height: 180,
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(Icons.qr_code, size: 64, color: Colors.grey),
       ),
     );
   }
