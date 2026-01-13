@@ -243,4 +243,106 @@ class AuthService {
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
+  // ===============================================================================================
+  // PROFILE METHODS
+  // ===============================================================================================
+
+  // Get Profile Data
+  static Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final headers = await getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/student/profile'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {'success': false, 'message': 'Failed to load profile'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
+  // Update Profile
+  static Future<Map<String, dynamic>> updateProfile({
+    String? name,
+    List<String>? interests,
+    String? imagePath,
+  }) async {
+    try {
+      final headers = await getAuthHeaders();
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}/student/profile/update'),
+      );
+
+      request.headers.addAll(headers);
+
+      if (name != null) {
+        request.fields['student_name'] = name;
+      }
+
+      if (interests != null) {
+        // Send as array
+        for (int i = 0; i < interests.length; i++) {
+          request.fields['interest_in[$i]'] = interests[i];
+        }
+      }
+
+      if (imagePath != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profile_image', imagePath),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {'success': false, 'message': 'Failed to update profile'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
+  // Change Password
+  static Future<Map<String, dynamic>> changePassword(
+    String currentPassword,
+    String newPassword,
+    String confirmPassword,
+  ) async {
+    try {
+      final headers = await getAuthHeaders();
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/student/change-password'),
+        headers: headers,
+        body: json.encode({
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'new_password_confirmation': confirmPassword,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {'success': true, 'message': data['message']};
+      } else {
+        final data = json.decode(response.body);
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to change password',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
 }

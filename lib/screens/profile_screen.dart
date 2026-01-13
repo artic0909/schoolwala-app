@@ -3,6 +3,7 @@ import '../constants/app_constants.dart';
 import 'login_screen.dart';
 import '../widgets/showcase_card.dart';
 import 'profile_edit_screen.dart';
+import '../services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String studentName;
@@ -18,6 +19,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   late AnimationController _controller;
   late Animation<double> _animation;
 
+  bool _isLoading = true;
+  Map<String, dynamic>? _profileData;
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +35,29 @@ class _ProfileScreenState extends State<ProfileScreen>
       begin: 0,
       end: 10,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.getProfile();
+
+    if (result['success']) {
+      setState(() {
+        _profileData = result['data'];
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _errorMessage = result['message'] ?? 'Failed to load profile';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -38,8 +66,138 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
+  List<String> _getInterests() {
+    if (_profileData == null || _profileData!['profile'] == null) {
+      return [];
+    }
+
+    final interestIn = _profileData!['profile']['interest_in'];
+    if (interestIn == null) return [];
+
+    if (interestIn is List) {
+      return List<String>.from(interestIn);
+    } else if (interestIn is String) {
+      try {
+        final decoded = interestIn.replaceAll('\\', '');
+        final List<dynamic> parsed =
+            (decoded.startsWith('['))
+                ? List<dynamic>.from(
+                  decoded
+                      .substring(1, decoded.length - 1)
+                      .split(',')
+                      .map((e) => e.trim().replaceAll('"', '')),
+                )
+                : [decoded];
+        return List<String>.from(parsed);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  IconData _getIconForInterest(String interest) {
+    final Map<String, IconData> iconMap = {
+      'Mathematics': Icons.calculate,
+      'Science': Icons.science,
+      'Coding': Icons.computer,
+      'Hindi': Icons.translate,
+      'English': Icons.abc,
+      'Art & Drawing': Icons.palette,
+      'Reading': Icons.book,
+      'Music': Icons.music_note,
+      'History': Icons.history_edu,
+      'Geography': Icons.public,
+      'Physics': Icons.science,
+      'Chemistry': Icons.science,
+      'Biology': Icons.biotech,
+    };
+    return iconMap[interest] ?? Icons.star;
+  }
+
+  Color _getColorForInterest(int index) {
+    final List<Color> colors = [
+      Colors.teal,
+      Colors.lightBlue,
+      Colors.cyan,
+      Colors.indigoAccent,
+      Colors.purple,
+      Colors.pink,
+      Colors.orange,
+      Colors.green,
+    ];
+    return colors[index % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'My Profile',
+            style: TextStyle(
+              color: AppColors.darkNavy,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryOrange),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'My Profile',
+            style: TextStyle(
+              color: AppColors.darkNavy,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(_errorMessage!, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadProfile,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final student = _profileData!['student'];
+    final profile = _profileData!['profile'];
+    final classDetails = _profileData!['class_details'];
+    final interests = _getInterests();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -92,17 +250,20 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                     // Update Profile Button
                     GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
+                      onTap: () async {
+                        final result = await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder:
                                 (context) => ProfileEditScreen(
-                                  currentName: widget.studentName,
-                                  currentEmail:
-                                      'student@schoolwala.com', // Placeholder
+                                  profileData: _profileData!,
                                 ),
                           ),
                         );
+
+                        // Reload profile if updated
+                        if (result == true) {
+                          _loadProfile();
+                        }
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -144,13 +305,16 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                     // Logout Button
                     GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                          (route) => false,
-                        );
+                      onTap: () async {
+                        await AuthService.logout();
+                        if (mounted) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        }
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -223,10 +387,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                               color: const Color(0xFFEAAA93),
                               width: 3,
                             ),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/profile.jpg'),
-                              fit: BoxFit.cover,
-                            ),
+                            image:
+                                profile['profile_image'] != null
+                                    ? DecorationImage(
+                                      image: NetworkImage(
+                                        'https://schoolwala.info/storage/${profile['profile_image']}',
+                                      ),
+                                      fit: BoxFit.cover,
+                                    )
+                                    : const DecorationImage(
+                                      image: AssetImage(
+                                        'assets/images/profile.jpg',
+                                      ),
+                                      fit: BoxFit.cover,
+                                    ),
                           ),
                         ),
                       ),
@@ -239,7 +413,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             clipBehavior: Clip.none,
                             children: [
                               Positioned(
-                                top: 0 + _animation.value, // Float down
+                                top: 0 + _animation.value,
                                 right: 15,
                                 child: _buildBadge(
                                   Icons.star,
@@ -247,7 +421,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                               ),
                               Positioned(
-                                bottom: 0 - _animation.value, // Float up
+                                bottom: 0 - _animation.value,
                                 right: 20,
                                 child: _buildBadge(
                                   Icons.emoji_events,
@@ -255,8 +429,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                               ),
                               Positioned(
-                                bottom:
-                                    40 + (_animation.value / 2), // Float slower
+                                bottom: 40 + (_animation.value / 2),
                                 left: 0,
                                 child: _buildBadge(
                                   Icons.lightbulb,
@@ -279,7 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Column(
                   children: [
                     Text(
-                      widget.studentName,
+                      student['student_name'] ?? 'Student',
                       style: const TextStyle(
                         fontFamily: 'Comic Sans MS',
                         fontSize: 26,
@@ -289,28 +462,28 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                     const SizedBox(height: 8),
                     RichText(
-                      text: const TextSpan(
-                        style: TextStyle(
+                      text: TextSpan(
+                        style: const TextStyle(
                           color: AppColors.darkNavy,
                           fontSize: 13,
                         ),
                         children: [
-                          TextSpan(
+                          const TextSpan(
                             text: 'Student ID: ',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           TextSpan(
-                            text: '25-SW-CLASS8-02',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            text: student['student_id'] ?? 'N/A',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Curious learner exploring the world of numbers and science! Currently in Class 8.',
+                    Text(
+                      'Curious learner exploring the world! Currently in ${classDetails?['name'] ?? 'Class 8'}.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 13,
                         height: 1.4,
@@ -327,21 +500,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                 children: [
                   _buildStatCard(
                     Icons.videocam,
-                    '6',
+                    '${profile['no_practise_test'] ?? 0}',
                     'Videos Watched',
                     Colors.orange,
                   ),
                   const SizedBox(height: 12),
                   _buildStatCard(
                     Icons.emoji_events,
-                    '44',
+                    '${profile['total_practise_test_score'] ?? 0}',
                     'Learning Points',
                     Colors.amber,
                   ),
                   const SizedBox(height: 12),
                   _buildStatCard(
                     Icons.check_circle,
-                    '6',
+                    '${profile['no_practise_test'] ?? 0}',
                     'Practice Tests Completed',
                     Colors.orange,
                   ),
@@ -371,36 +544,39 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
 
               // Showcase Grid (2 per row)
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1.1,
-                children: const [
-                  ShowcaseCard(
-                    title: 'Mathematic',
-                    icon: Icons.calculate,
-                    color: Colors.teal,
+              interests.isEmpty
+                  ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text(
+                        'No interests selected yet.\nUpdate your profile to add interests!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  )
+                  : GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 1.1,
+                        ),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: interests.length,
+                    itemBuilder: (context, index) {
+                      return ShowcaseCard(
+                        title: interests[index],
+                        icon: _getIconForInterest(interests[index]),
+                        color: _getColorForInterest(index),
+                      );
+                    },
                   ),
-                  ShowcaseCard(
-                    title: 'Science',
-                    icon: Icons.science,
-                    color: Colors.lightBlue,
-                  ),
-                  ShowcaseCard(
-                    title: 'Coding',
-                    icon: Icons.computer,
-                    color: Colors.cyan,
-                  ),
-                  ShowcaseCard(
-                    title: 'Hindi',
-                    icon: Icons.translate,
-                    color: Colors.indigoAccent,
-                  ),
-                ],
-              ),
 
               const SizedBox(height: 40),
             ],

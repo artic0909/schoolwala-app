@@ -4,16 +4,12 @@ import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
+import '../services/auth_service.dart';
 
 class ProfileEditScreen extends StatefulWidget {
-  final String currentName;
-  final String currentEmail;
+  final Map<String, dynamic> profileData;
 
-  const ProfileEditScreen({
-    super.key,
-    required this.currentName,
-    required this.currentEmail,
-  });
+  const ProfileEditScreen({super.key, required this.profileData});
 
   @override
   State<ProfileEditScreen> createState() => _ProfileEditScreenState();
@@ -22,7 +18,8 @@ class ProfileEditScreen extends StatefulWidget {
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _emailController;
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
@@ -30,6 +27,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
+  bool _obscureCurrentPassword = true;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -91,56 +89,132 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     'Environment & Nature',
   ];
 
-  final Set<String> _selectedInterests = {
-    'Mathematics',
-    'Science',
-    'Coding',
-    'Hindi',
-  };
+  Set<String> _selectedInterests = {};
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.currentName);
-    _emailController = TextEditingController(text: widget.currentEmail);
+    final student = widget.profileData['student'];
+    _nameController = TextEditingController(
+      text: student['student_name'] ?? '',
+    );
+
+    // Load existing interests
+    _selectedInterests = _getExistingInterests().toSet();
+  }
+
+  List<String> _getExistingInterests() {
+    final profile = widget.profileData['profile'];
+    if (profile == null) return [];
+
+    final interestIn = profile['interest_in'];
+    if (interestIn == null) return [];
+
+    if (interestIn is List) {
+      return List<String>.from(interestIn);
+    } else if (interestIn is String) {
+      try {
+        final decoded = interestIn.replaceAll('\\', '');
+        final List<dynamic> parsed =
+            (decoded.startsWith('['))
+                ? List<dynamic>.from(
+                  decoded
+                      .substring(1, decoded.length - 1)
+                      .split(',')
+                      .map((e) => e.trim().replaceAll('"', '')),
+                )
+                : [decoded];
+        return List<String>.from(parsed);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _handleSave() async {
+  Future<void> _handleSave() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: Colors.green,
-          ),
+      try {
+        // Update profile (name, interests, image)
+        final profileResult = await AuthService.updateProfile(
+          name: _nameController.text,
+          interests: _selectedInterests.toList(),
+          imagePath: _imageFile?.path,
         );
-        Navigator.of(context).pop();
+
+        if (!profileResult['success']) {
+          throw Exception(
+            profileResult['message'] ?? 'Failed to update profile',
+          );
+        }
+
+        // Handle password change if provided
+        if (_currentPasswordController.text.isNotEmpty ||
+            _passwordController.text.isNotEmpty) {
+          if (_currentPasswordController.text.isEmpty) {
+            throw Exception('Current password is required to change password');
+          }
+
+          final passwordResult = await AuthService.changePassword(
+            _currentPasswordController.text,
+            _passwordController.text,
+            _confirmPasswordController.text,
+          );
+
+          if (!passwordResult['success']) {
+            throw Exception(
+              passwordResult['message'] ?? 'Failed to change password',
+            );
+          }
+        }
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop(true); // Return true to indicate success
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final profile = widget.profileData['profile'];
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -158,7 +232,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           icon: const Icon(
             Icons.arrow_back_ios,
             color: AppColors.darkNavy,
-            size: 18, // Smaller size as requested
+            size: 18,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -208,9 +282,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           image:
                               _imageFile != null
                                   ? FileImage(_imageFile!) as ImageProvider
-                                  : const AssetImage(
-                                    'assets/images/profile.jpg',
-                                  ),
+                                  : (profile['profile_image'] != null
+                                      ? NetworkImage(
+                                        'https://schoolwala.info/storage/${profile['profile_image']}',
+                                      )
+                                      : const AssetImage(
+                                            'assets/images/profile.jpg',
+                                          )
+                                          as ImageProvider),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -220,7 +299,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       right: 0,
                       child: GestureDetector(
                         onTap: () {
-                          // Show Camera/Gallery options
                           showModalBottomSheet(
                             context: context,
                             builder:
@@ -328,61 +406,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               const SizedBox(height: 30),
 
               // Interests / Showcase
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Your Interests',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryOrange,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () async {
-                      // Save Interests Logic
-                      setState(() {
-                        _isLoading = true;
-                      });
-
-                      // Simulate API call
-                      await Future.delayed(const Duration(milliseconds: 800));
-
-                      setState(() {
-                        _isLoading = false;
-                      });
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Interests saved successfully!'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.primaryOrange),
-                        borderRadius: BorderRadius.circular(20),
-                        color: Colors.white, // ensure touch target
-                      ),
-                      child: const Text(
-                        'Save',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.primaryOrange,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              const Text(
+                'Your Interests',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryOrange,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -446,7 +476,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   ),
                   SizedBox(width: 8),
                   Text(
-                    'Security',
+                    'Change Password (Optional)',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -455,27 +485,40 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // Email
-              CustomTextField(
-                controller: _emailController,
-                label: 'Email',
-                hintText: 'gopi@gmail.com',
-                prefixIcon: Icons.email_outlined,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
+              const SizedBox(height: 8),
+              const Text(
+                'Leave blank if you don\'t want to change your password',
+                style: TextStyle(fontSize: 12, color: AppColors.textGray),
               ),
               const SizedBox(height: 16),
 
-              // Password
+              // Current Password
+              CustomTextField(
+                controller: _currentPasswordController,
+                label: 'Current Password',
+                hintText: '••••••••',
+                obscureText: _obscureCurrentPassword,
+                prefixIcon: Icons.lock_outline,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureCurrentPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: AppColors.textGray,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureCurrentPassword = !_obscureCurrentPassword;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // New Password
               CustomTextField(
                 controller: _passwordController,
-                label: 'Password',
+                label: 'New Password',
                 hintText: '••••••••',
                 obscureText: _obscurePassword,
                 prefixIcon: Icons.lock_outline,
@@ -492,11 +535,23 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     });
                   },
                 ),
+                validator: (value) {
+                  if (_currentPasswordController.text.isNotEmpty &&
+                      (value == null || value.isEmpty)) {
+                    return 'Please enter new password';
+                  }
+                  if (value != null && value.isNotEmpty && value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
+
+              // Confirm Password
               CustomTextField(
                 controller: _confirmPasswordController,
-                label: 'Confirm Password',
+                label: 'Confirm New Password',
                 hintText: 'Confirm Password',
                 obscureText: _obscureConfirmPassword,
                 prefixIcon: Icons.lock_outline,
@@ -525,10 +580,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               const SizedBox(height: 40),
 
               // Save Button
-              CustomButton(
-                text: 'Save Changes',
-                onPressed: _isLoading ? () {} : _handleSave,
-              ),
+              _isLoading
+                  ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryOrange,
+                    ),
+                  )
+                  : CustomButton(text: 'Save Changes', onPressed: _handleSave),
               const SizedBox(height: 20),
             ],
           ),
