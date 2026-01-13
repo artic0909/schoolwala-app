@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
 import '../services/student_service.dart';
+import '../services/auth_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String studentName;
@@ -172,7 +173,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _studentNameController.text = widget.studentName;
     _classController.text = widget.className;
     _amountController.text = widget.amount;
-    // Pre-fill email/phone if available from profile could be done here
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = await AuthService.getCurrentUser();
+      if (user != null) {
+        if (mounted) {
+          setState(() {
+            _emailController.text = user['email'] ?? '';
+            _phoneController.text = user['phone'] ?? user['mobile'] ?? '';
+            // Update student name if not provided or just to be safe (optional, but requested "all field")
+            _studentNameController.text =
+                user['student_name'] ?? widget.studentName;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
+    }
   }
 
   @override
@@ -355,18 +375,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     height: 180,
                                     fit: BoxFit.contain,
                                     errorBuilder: (context, error, stackTrace) {
+                                      debugPrint('Error loading QR: $error');
                                       return _buildQrPlaceholder();
                                     },
                                   )
-                                  : Image.asset(
-                                    'assets/images/qr.jpg',
-                                    width: 180,
-                                    height: 180,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return _buildQrPlaceholder();
-                                    },
-                                  ),
+                                  : _buildQrPlaceholder(),
                         ),
                         const SizedBox(height: 16),
                         Text(
