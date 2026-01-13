@@ -5,6 +5,7 @@ import '../widgets/curriculum_card.dart';
 import '../widgets/feature_card.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/profile_screen.dart';
+import '../services/auth_service.dart';
 
 class MyClassScreen extends StatefulWidget {
   final String studentName;
@@ -16,6 +17,27 @@ class MyClassScreen extends StatefulWidget {
 }
 
 class _MyClassScreenState extends State<MyClassScreen> {
+  String? _profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final result = await AuthService.getProfile();
+    if (result['success'] && mounted) {
+      final profile = result['data']['profile'];
+      if (profile['profile_image'] != null) {
+        setState(() {
+          _profileImageUrl =
+              'https://schoolwala.info/storage/${profile['profile_image']}';
+        });
+      }
+    }
+  }
+
   // Sample subjects data - will be dynamic later
   final List<SubjectData> subjects = [
     SubjectData(
@@ -264,8 +286,14 @@ class _MyClassScreenState extends State<MyClassScreen> {
                               color: AppColors.primaryOrange,
                               width: 2,
                             ),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/profile.jpg'),
+                            image: DecorationImage(
+                              image:
+                                  _profileImageUrl != null
+                                      ? NetworkImage(_profileImageUrl!)
+                                          as ImageProvider
+                                      : const AssetImage(
+                                        'assets/images/profile.jpg',
+                                      ),
                               fit: BoxFit.cover,
                             ),
                             boxShadow: [

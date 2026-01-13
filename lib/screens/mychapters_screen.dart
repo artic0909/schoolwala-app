@@ -5,6 +5,7 @@ import '../screens/myclass_screen.dart';
 import '../screens/myvideos_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/payment_screen.dart';
+import '../services/auth_service.dart';
 
 class MyChaptersScreen extends StatefulWidget {
   final SubjectData subject;
@@ -21,6 +22,27 @@ class MyChaptersScreen extends StatefulWidget {
 }
 
 class _MyChaptersScreenState extends State<MyChaptersScreen> {
+  String? _profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final result = await AuthService.getProfile();
+    if (result['success'] && mounted) {
+      final profile = result['data']['profile'];
+      if (profile['profile_image'] != null) {
+        setState(() {
+          _profileImageUrl =
+              'https://schoolwala.info/storage/${profile['profile_image']}';
+        });
+      }
+    }
+  }
+
   // Sample chapters data - will be dynamic from backend
   final List<ChapterData> chapters = [
     ChapterData(number: 1, title: 'বোঝাপড়া', videoCount: 1),
@@ -188,8 +210,14 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                               color: AppColors.primaryOrange,
                               width: 2,
                             ),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/profile.jpg'),
+                            image: DecorationImage(
+                              image:
+                                  _profileImageUrl != null
+                                      ? NetworkImage(_profileImageUrl!)
+                                          as ImageProvider
+                                      : const AssetImage(
+                                        'assets/images/profile.jpg',
+                                      ),
                               fit: BoxFit.cover,
                             ),
                             boxShadow: [
