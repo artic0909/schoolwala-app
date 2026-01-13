@@ -43,12 +43,15 @@ class AuthService {
         final data = json.decode(response.body);
 
         // Save Token and User Data
-        if (data['token'] != null) {
+        if (data['data'] != null && data['data']['token'] != null) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_tokenKey, data['token']);
-          print('AuthService: Token saved: ${data['token']}');
-          if (data['user'] != null) {
-            await prefs.setString(_userKey, json.encode(data['user']));
+          await prefs.setString(_tokenKey, data['data']['token']);
+          print('AuthService: Token saved: ${data['data']['token']}');
+          if (data['data']['student'] != null) {
+            await prefs.setString(
+              _userKey,
+              json.encode(data['data']['student']),
+            );
           }
         }
 
@@ -80,11 +83,15 @@ class AuthService {
         final responseData = json.decode(response.body);
 
         // Save Token and User Data if provided on registration
-        if (responseData['token'] != null) {
+        if (responseData['data'] != null &&
+            responseData['data']['token'] != null) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_tokenKey, responseData['token']);
-          if (responseData['user'] != null) {
-            await prefs.setString(_userKey, json.encode(responseData['user']));
+          await prefs.setString(_tokenKey, responseData['data']['token']);
+          if (responseData['data']['student'] != null) {
+            await prefs.setString(
+              _userKey,
+              json.encode(responseData['data']['student']),
+            );
           }
         }
 
@@ -148,8 +155,10 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         // Update local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_userKey, json.encode(data));
+        if (data['data'] != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_userKey, json.encode(data['data']));
+        }
         return {'success': true, 'data': data};
       } else {
         return {'success': false, 'message': 'Failed to fetch user'};

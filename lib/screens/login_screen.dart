@@ -92,9 +92,10 @@ class _LoginScreenState extends State<LoginScreen>
         // Ideally, name should come from API response
         String studentName = 'Student';
         if (result['data'] != null &&
-            result['data']['user'] != null &&
-            result['data']['user']['name'] != null) {
-          studentName = result['data']['user']['name'];
+            result['data']['data'] != null &&
+            result['data']['data']['student'] != null &&
+            result['data']['data']['student']['student_name'] != null) {
+          studentName = result['data']['data']['student']['student_name'];
         } else {
           // Fallback to email extraction
           studentName = email
