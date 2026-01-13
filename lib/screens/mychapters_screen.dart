@@ -26,6 +26,7 @@ class MyChaptersScreen extends StatefulWidget {
 
 class _MyChaptersScreenState extends State<MyChaptersScreen> {
   String? _profileImageUrl;
+  String? _className;
 
   // Dynamic chapters loaded from backend
   List<ChapterData> _chapters = [];
@@ -35,9 +36,14 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
   int _totalVideos = 0;
   int _totalActivities = 0;
 
+  // Payment/Fee details
+  Map<String, dynamic>? _feeDetails;
+  bool _hasActiveSubscription = false;
+
   @override
   void initState() {
     super.initState();
+    _feeDetails = widget.feeDetails;
     _loadProfileImage();
     _loadChapters();
   }
@@ -57,6 +63,9 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
 
         final List<dynamic> list = subjectData['chapters'] ?? [];
 
+        // Get subscription status
+        _hasActiveSubscription = subjectData['has_subscription'] ?? false;
+
         _chapters =
             list.asMap().entries.map((entry) {
               int index = entry.key;
@@ -64,24 +73,20 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
 
               return ChapterData(
                 id: item['id']?.toString() ?? '',
-                number: index + 1, // Generate sequential number
-                title: item['name'] ?? '', // Map 'name' from backend to 'title'
-                videoCount:
-                    item['videos_count'] ??
-                    0, // Using count from updated backend
-                isLocked:
-                    item['is_locked'] ?? false, // Map is_locked from backend
+                number: item['chapter_index'] ?? (index + 1),
+                title: item['chapter_name'] ?? '',
+                videoCount: item['videos_count'] ?? 0,
+                isLocked: item['is_locked'] ?? false,
               );
             }).toList();
 
         // Calculate totals
-        _totalChapters = _chapters.length;
+        _totalChapters = subjectData['total_chapters'] ?? _chapters.length;
         _totalVideos = _chapters.fold(
           0,
           (sum, chapter) => sum + chapter.videoCount,
         );
-        _totalActivities =
-            _totalVideos; // As per requirement: total activities == total videos
+        _totalActivities = _totalVideos;
 
         if (_chapters.isEmpty) {
           _chaptersError = 'No chapters found for this subject.';
@@ -90,6 +95,11 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
         setState(() {
           _isLoadingChapters = false;
         });
+
+        // Load payment info if not subscribed and we don't have it yet
+        if (!_hasActiveSubscription && _feeDetails == null) {
+          _loadPaymentInfo();
+        }
       } catch (e) {
         setState(() {
           _chaptersError = 'Error parsing chapters: $e';
@@ -104,41 +114,94 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     }
   }
 
+  Future<void> _loadPaymentInfo() async {
+    final result = await StudentService.getPaymentInfo();
+    if (result['success'] && mounted) {
+      try {
+        final body = result['data'];
+        Map<String, dynamic> paymentData = {};
+
+        if (body is Map && body.containsKey('data')) {
+          paymentData = Map<String, dynamic>.from(body['data']);
+        } else if (body is Map) {
+          paymentData = Map<String, dynamic>.from(body);
+        }
+
+        final classData = paymentData['class'];
+        final feesData = paymentData['fees'];
+
+        if (classData != null) {
+          _className = classData['class_name'] ?? 'Class 8';
+        }
+
+        if (feesData != null) {
+          setState(() {
+            _feeDetails = {
+              'id': feesData['id'],
+              'class_id': feesData['class_id'],
+              'amount': feesData['amount']?.toString() ?? '0',
+              'qrimage': feesData['qrimage'],
+            };
+          });
+        }
+      } catch (e) {
+        debugPrint('Error loading payment info: $e');
+      }
+    }
+  }
+
   Future<void> _loadProfileImage() async {
     final result = await AuthService.getProfile();
     if (result['success'] && mounted) {
       final profile = result['data']['profile'];
+      final classDetails = result['data']['class_details'];
+
       if (profile['profile_image'] != null) {
         setState(() {
           _profileImageUrl =
               'https://schoolwala.info/storage/${profile['profile_image']}';
         });
       }
+
+      if (classDetails != null && classDetails['class_name'] != null) {
+        setState(() {
+          _className = classDetails['class_name'];
+        });
+      }
     }
   }
 
   void _handleChapterTap(ChapterData chapter) {
-    // Check if chapter is locked
     if (chapter.isLocked) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => PaymentScreen(
-                studentName: widget.studentName,
-                className:
-                    'Class 8', // Could be dynamic if we passed className or feeDetails class_id
-                feeId: widget.feeDetails?['id']?.toString() ?? '',
-                amount: widget.feeDetails?['amount']?.toString() ?? '0',
-                subjectId: widget.subject.id,
-                classId: widget.feeDetails?['class_id']?.toString() ?? '',
-                qrCodeUrl:
-                    widget.feeDetails?['qrimage'] != null
-                        ? 'https://schoolwala.info/storage/${widget.feeDetails!['qrimage']}'
-                        : null,
-              ),
-        ),
-      );
+      // Show payment screen if chapter is locked
+      if (_feeDetails != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => PaymentScreen(
+                  studentName: widget.studentName,
+                  className: _className ?? 'Class 8',
+                  feeId: _feeDetails!['id']?.toString() ?? '',
+                  amount: _feeDetails!['amount']?.toString() ?? '0',
+                  subjectId: widget.subject.id,
+                  classId: _feeDetails!['class_id']?.toString() ?? '',
+                  qrCodeUrl:
+                      _feeDetails!['qrimage'] != null
+                          ? 'https://schoolwala.info/storage/${_feeDetails!['qrimage']}'
+                          : null,
+                ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Payment information not available. Please try again.',
+            ),
+          ),
+        );
+      }
     } else {
       // Navigate to video lessons screen for unlocked chapters
       Navigator.push(
@@ -161,7 +224,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: CustomScrollView(
         slivers: [
-          // App Bar - Same style as MyClassScreen
+          // App Bar
           SliverAppBar(
             floating: true,
             pinned: true,
@@ -191,8 +254,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                   ),
                   child: Row(
                     children: [
-                      const SizedBox(width: 40), // Space for back button
-                      // Logo with gradient background
+                      const SizedBox(width: 40),
                       Container(
                         width: 50,
                         height: 50,
@@ -229,10 +291,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                           ),
                         ),
                       ),
-
                       const Spacer(),
-
-                      // Student name
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -255,10 +314,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(width: 12),
-
-                      // Profile button
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -326,7 +382,6 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                   ),
                   child: Stack(
                     children: [
-                      // Background image
                       Positioned.fill(
                         child: Image.asset(
                           widget.subject.imagePath,
@@ -344,8 +399,6 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                           },
                         ),
                       ),
-
-                      // Dark overlay
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -360,14 +413,11 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                           ),
                         ),
                       ),
-
-                      // Content
                       Padding(
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Icon
                             Container(
                               width: 60,
                               height: 60,
@@ -381,10 +431,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                 color: Colors.white,
                               ),
                             ),
-
                             const Spacer(),
-
-                            // Subject name
                             Text(
                               widget.subject.name,
                               style: const TextStyle(
@@ -394,10 +441,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                 height: 1.2,
                               ),
                             ),
-
                             const SizedBox(height: 8),
-
-                            // Description
                             Text(
                               widget.subject.description,
                               style: TextStyle(
@@ -408,10 +452,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),
-
                             const SizedBox(height: 16),
-
-                            // Stats row
                             Row(
                               children: [
                                 _buildStatCard(
@@ -446,7 +487,6 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Section header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -475,9 +515,9 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                   color: AppColors.textGray.withOpacity(0.8),
                                 ),
                                 const SizedBox(width: 6),
-                                const Text(
-                                  'Class 8',
-                                  style: TextStyle(
+                                Text(
+                                  _className ?? 'Class 8',
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.darkNavy,
@@ -488,10 +528,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Chapters list loading logic
                       _buildChapterContent(),
                     ],
                   ),
@@ -541,8 +578,6 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     );
   }
 
-  // ... existing stat card ...
-
   Widget _buildStatCard(String value, String label) {
     return Expanded(
       child: Container(
@@ -579,7 +614,6 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
   }
 }
 
-// Chapter data model
 class ChapterData {
   final String id;
   final int number;

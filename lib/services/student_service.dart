@@ -97,7 +97,12 @@ class StudentService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': json.decode(response.body)};
       }
-      return {'success': false, 'message': 'Failed to fetch chapters'};
+      final error = json.decode(response.body);
+      return {
+        'success': false,
+        'message': error['message'] ?? 'Failed to fetch chapters',
+        'status': response.statusCode,
+      };
     } catch (e) {
       return {'success': false, 'message': 'Connection error: $e'};
     }
@@ -112,9 +117,25 @@ class StudentService {
         headers: headers,
       );
       if (response.statusCode == 200) {
-        return {'success': true, 'data': json.decode(response.body)};
+        return {
+          'success': true,
+          'data': json.decode(response.body),
+          'status': 200,
+        };
+      } else if (response.statusCode == 403) {
+        final error = json.decode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'This chapter is locked',
+          'status': 403,
+        };
       }
-      return {'success': false, 'message': 'Failed to fetch videos'};
+      final error = json.decode(response.body);
+      return {
+        'success': false,
+        'message': error['message'] ?? 'Failed to fetch videos',
+        'status': response.statusCode,
+      };
     } catch (e) {
       return {'success': false, 'message': 'Connection error: $e'};
     }
@@ -251,6 +272,29 @@ class StudentService {
         'message':
             'Failed to store payment: ${response.statusCode} ${response.body}',
       };
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
+  // Get Payment Info
+  static Future<Map<String, dynamic>> getPaymentInfo() async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
+      final response = await http.get(
+        Uri.parse(ApiConstants.paymentInfoEndpoint),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': json.decode(response.body)};
+      } else {
+        final error = json.decode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Failed to load payment information',
+        };
+      }
     } catch (e) {
       return {'success': false, 'message': 'Connection error: $e'};
     }

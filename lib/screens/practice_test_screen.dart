@@ -6,7 +6,14 @@ import '../widgets/custom_button.dart';
 import 'test_result_screen.dart';
 
 class PracticeTestScreen extends StatefulWidget {
-  const PracticeTestScreen({super.key});
+  final String videoId;
+  final String videoTitle;
+
+  const PracticeTestScreen({
+    super.key,
+    required this.videoId,
+    required this.videoTitle,
+  });
 
   @override
   State<PracticeTestScreen> createState() => _PracticeTestScreenState();

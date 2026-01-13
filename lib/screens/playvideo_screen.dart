@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../constants/app_constants.dart';
 import '../screens/myvideos_screen.dart';
+import '../services/student_service.dart';
 
 class PlayVideoScreen extends StatefulWidget {
   final VideoData video;
@@ -19,6 +20,7 @@ class PlayVideoScreen extends StatefulWidget {
 
 class _PlayVideoScreenState extends State<PlayVideoScreen> {
   late YoutubePlayerController _controller;
+  String? _videoId;
   int _selectedRating = 0;
   final TextEditingController _feedbackController = TextEditingController();
   bool _isLiked = false;
@@ -26,19 +28,21 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
   @override
   void initState() {
     super.initState();
-    final videoId = _extractVideoId(widget.videoUrl);
+    _videoId = _extractVideoId(widget.videoUrl);
     debugPrint(
-      'PlayVideoScreen: URL: ${widget.videoUrl}, Extracted ID: $videoId',
+      'PlayVideoScreen: URL: ${widget.videoUrl}, Extracted ID: $_videoId',
     );
 
-    _controller = YoutubePlayerController(
-      initialVideoId: videoId ?? '',
-      flags: const YoutubePlayerFlags(
-        autoPlay: true,
-        mute: false,
-        enableCaption: false,
-      ),
-    );
+    if (_videoId != null && _videoId!.isNotEmpty) {
+      _controller = YoutubePlayerController(
+        initialVideoId: _videoId!,
+        flags: const YoutubePlayerFlags(
+          autoPlay: true,
+          mute: false,
+          enableCaption: false,
+        ),
+      );
+    }
   }
 
   String? _extractVideoId(String url) {
@@ -67,35 +71,63 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (_videoId != null && _videoId!.isNotEmpty) {
+      _controller.dispose();
+    }
     _feedbackController.dispose();
     super.dispose();
   }
 
-  void _handleLike() {
+  Future<void> _handleLike() async {
+    // Optimistic update
     setState(() {
       _isLiked = !_isLiked;
     });
+
+    final result = await StudentService.likeVideo(widget.video.id);
+
+    if (result['success']) {
+      // Keep optimistic update or update with server count if returned
+    } else {
+      // Revert if failed
+      setState(() {
+        _isLiked = !_isLiked;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to update like'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDownloadNotes() async {
+    if (widget.video.noteUrl == null || widget.video.noteUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No notes available for this video')),
+      );
+      return;
+    }
+
+    final url = widget.video.noteUrl!;
+    // TODO: Use url_launcher to open the link
+    // if (await canLaunchUrl(Uri.parse(url))) {
+    //   await launchUrl(Uri.parse(url));
+    // }
+
+    debugPrint('Opening notes: $url');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isLiked ? 'Liked!' : 'Like removed'),
-        backgroundColor: AppColors.primaryOrange,
-        duration: const Duration(seconds: 1),
+        content: Text('Opening notes: $url'),
+        backgroundColor: const Color(0xFF3B9EFF),
       ),
     );
   }
 
-  void _handleDownloadNotes() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Downloading notes...'),
-        backgroundColor: Color(0xFF3B9EFF),
-        duration: Duration(seconds: 1),
-      ),
-    );
-  }
-
-  void _handleSubmitFeedback() {
+  Future<void> _handleSubmitFeedback() async {
     if (_selectedRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -107,29 +139,35 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
       return;
     }
 
-    if (_feedbackController.text.trim().isEmpty) {
+    final result = await StudentService.submitFeedback(
+      widget.video.id,
+      _feedbackController
+          .text, // You might need to send rating too if API supports it
+    );
+
+    if (!mounted) return;
+
+    if (result['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please write your feedback'),
-          backgroundColor: Colors.red,
+          content: Text('Feedback submitted successfully!'),
+          backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
       );
-      return;
+
+      setState(() {
+        _selectedRating = 0;
+        _feedbackController.clear();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to submit feedback'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Feedback submitted successfully!'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
-
-    setState(() {
-      _selectedRating = 0;
-      _feedbackController.clear();
-    });
   }
 
   @override
@@ -201,9 +239,23 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                             color: AppColors.textGray,
                           ),
                           const SizedBox(width: 4),
-                          const Text(
-                            '0 likes',
-                            style: TextStyle(
+                          Text(
+                            '${widget.video.views} views',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textGray,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Icon(
+                            Icons.thumb_up_outlined,
+                            size: 16,
+                            color: AppColors.textGray,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${widget.video.likes} likes',
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textGray,
                             ),
@@ -218,20 +270,6 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                           Text(
                             widget.video.duration,
                             style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textGray,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 16,
-                            color: AppColors.textGray,
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'Published: Nov 24, 2025',
-                            style: TextStyle(
                               fontSize: 13,
                               color: AppColors.textGray,
                             ),
@@ -295,51 +333,49 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                               ),
                             ),
                           ),
+                        ],
+                      ),
 
-                          const SizedBox(width: 12),
-
-                          // Download Notes Button
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: _handleDownloadNotes,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                      // Only show note download if available
+                      if (widget.video.noteUrl != null &&
+                          widget.video.noteUrl!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: GestureDetector(
+                            onTap: _handleDownloadNotes,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3B9EFF).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFF3B9EFF),
+                                  width: 1.5,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF3B9EFF,
-                                  ).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: const Color(0xFF3B9EFF),
-                                    width: 1.5,
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.download_outlined,
+                                    size: 20,
+                                    color: Color(0xFF3B9EFF),
                                   ),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.download_outlined,
-                                      size: 20,
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Download Notes',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                       color: Color(0xFF3B9EFF),
                                     ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Download Notes',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF3B9EFF),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
 
                       const SizedBox(height: 24),
 

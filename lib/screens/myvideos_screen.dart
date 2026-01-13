@@ -32,6 +32,12 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
   bool _isLoadingVideos = true;
   String? _videosError;
 
+  // Chapter info from backend
+  String _chapterName = '';
+  String _subjectName = '';
+  int _chapterIndex = 1;
+  bool _isFirstChapter = false;
+
   @override
   void initState() {
     super.initState();
@@ -54,17 +60,43 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
 
   Future<void> _loadVideos() async {
     final result = await StudentService.getVideos(widget.chapter.id);
+
     if (result['success'] && mounted) {
       try {
-        final data = result['data'];
-        final List<dynamic> list = data['videos'] ?? [];
+        final body = result['data'];
+        Map<String, dynamic> videoData = {};
+
+        if (body is Map && body.containsKey('data')) {
+          videoData = Map<String, dynamic>.from(body['data']);
+        } else if (body is Map) {
+          videoData = Map<String, dynamic>.from(body);
+        }
+
+        // Extract chapter info
+        final chapterInfo = videoData['chapter'];
+        if (chapterInfo != null) {
+          _chapterName = chapterInfo['chapter_name'] ?? widget.chapter.title;
+          _subjectName = chapterInfo['subject_name'] ?? widget.subject.name;
+        }
+
+        _isFirstChapter = videoData['is_first_chapter'] ?? false;
+        _chapterIndex = videoData['chapter_index'] ?? widget.chapter.number;
+
+        // Extract videos
+        final List<dynamic> list = videoData['videos'] ?? [];
 
         _videos =
             list.map((item) {
-              String thumbnail = 'assets/images/thumbnail.jpg';
-              if (item['video_thumbnail'] != null) {
-                thumbnail =
-                    'https://schoolwala.info/storage/${item['video_thumbnail']}';
+              String thumbnailUrl = 'assets/images/thumbnail.jpg';
+              if (item['video_thumbnail'] != null &&
+                  item['video_thumbnail'].toString().isNotEmpty) {
+                // Check if it's already a full URL or needs the storage path
+                if (item['video_thumbnail'].toString().startsWith('http')) {
+                  thumbnailUrl = item['video_thumbnail'];
+                } else {
+                  thumbnailUrl =
+                      'https://schoolwala.info/storage/${item['video_thumbnail']}';
+                }
               }
 
               return VideoData(
@@ -72,11 +104,18 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                 title: item['video_title'] ?? 'Untitled Video',
                 description:
                     item['video_description'] ?? 'No description available.',
-                thumbnailPath: thumbnail,
+                thumbnailPath: thumbnailUrl,
                 duration: item['duration'] ?? '10:00',
-                hasNotes: item['has_notes'] ?? false,
-                hasPracticeTest: item['has_practice_test'] ?? false,
+                noteUrl: item['note_link'],
+                hasPracticeTest:
+                    item['questions'] != null &&
+                    item['questions'].toString() != '[]' &&
+                    item['questions'].toString() != 'null',
                 videoUrl: item['video_link'] ?? '',
+                likes: item['likes'] ?? 0,
+                views: item['views']?.toString() ?? '0',
+                isLiked:
+                    false, // You might need an API field 'is_liked' if available
               );
             }).toList();
 
@@ -95,7 +134,14 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
       }
     } else {
       setState(() {
-        _videosError = result['message'] ?? 'Failed to load videos';
+        // Check if it's a 403 error (locked chapter)
+        if (result['status'] == 403) {
+          _videosError =
+              result['message'] ??
+              'This chapter is locked. Please subscribe to access.';
+        } else {
+          _videosError = result['message'] ?? 'Failed to load videos';
+        }
         _isLoadingVideos = false;
       });
     }
@@ -123,23 +169,21 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
   void _handlePracticeTest(VideoData video) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PracticeTestScreen()),
+      MaterialPageRoute(
+        builder:
+            (context) =>
+                PracticeTestScreen(videoId: video.id, videoTitle: video.title),
+      ),
     );
   }
 
   void _handleVideoTap(VideoData video) {
-    // Navigate to video player screen
     Navigator.push(
       context,
       MaterialPageRoute(
         builder:
-            (context) => PlayVideoScreen(
-              video: video,
-              videoUrl:
-                  video.videoUrl.isNotEmpty
-                      ? video.videoUrl
-                      : 'https://www.youtube.com/embed/k0NMKKLGUHw?si=rHvRyrut5n3nmnf7',
-            ),
+            (context) =>
+                PlayVideoScreen(video: video, videoUrl: video.videoUrl),
       ),
     );
   }
@@ -150,7 +194,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: CustomScrollView(
         slivers: [
-          // App Bar - Same style as MyChaptersScreen
+          // App Bar
           SliverAppBar(
             floating: true,
             pinned: true,
@@ -180,8 +224,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                   ),
                   child: Row(
                     children: [
-                      const SizedBox(width: 40), // Space for back button
-                      // Logo with gradient background
+                      const SizedBox(width: 40),
                       Container(
                         width: 50,
                         height: 50,
@@ -218,10 +261,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                           ),
                         ),
                       ),
-
                       const Spacer(),
-
-                      // Student name
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -244,10 +284,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(width: 12),
-
-                      // Profile button
                       GestureDetector(
                         onTap: _handleProfileTap,
                         child: Container(
@@ -305,7 +342,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                   ),
                   child: Stack(
                     children: [
-                      // Background image
                       Positioned.fill(
                         child: Image.asset(
                           widget.subject.imagePath,
@@ -323,8 +359,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                           },
                         ),
                       ),
-
-                      // Dark overlay
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -339,14 +373,11 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                           ),
                         ),
                       ),
-
-                      // Content
                       Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Icon
                             Container(
                               width: 50,
                               height: 50,
@@ -360,12 +391,11 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                                 color: Colors.white,
                               ),
                             ),
-
                             const SizedBox(height: 12),
-
-                            // Chapter title
                             Text(
-                              widget.chapter.title,
+                              _chapterName.isNotEmpty
+                                  ? _chapterName
+                                  : widget.chapter.title,
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -375,13 +405,12 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-
                             const SizedBox(height: 8),
-
-                            // Description
-                            const Text(
-                              'Embark on a numerical adventure! Learn how to handle big numbers, compare them, and use them in real-life situations.',
-                              style: TextStyle(
+                            Text(
+                              _isFirstChapter
+                                  ? 'This is a FREE preview chapter. Subscribe to unlock all chapters!'
+                                  : 'Explore comprehensive video lessons and practice activities.',
+                              style: const TextStyle(
                                 fontSize: 11,
                                 color: Colors.white,
                                 height: 1.3,
@@ -389,15 +418,12 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-
                             const Spacer(),
-
-                            // Stats row
                             Row(
                               children: [
                                 _buildStatCard(
                                   _isLoadingVideos ? '-' : '${_videos.length}',
-                                  'Run Video Lessons',
+                                  'Video Lessons',
                                 ),
                                 const SizedBox(width: 12),
                                 _buildStatCard(
@@ -422,7 +448,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Section header
                       const Text(
                         'Video Lessons',
                         style: TextStyle(
@@ -431,10 +456,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                           color: AppColors.darkNavy,
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Videos list loading logic
                       _buildVideoList(),
                     ],
                   ),
@@ -452,7 +474,26 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_videosError != null) {
-      return Center(child: Text(_videosError!));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: AppColors.textGray.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _videosError!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: AppColors.textGray),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     if (_videos.isEmpty) {
       return const Center(child: Text('No videos available'));
@@ -534,34 +575,18 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                   ),
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFF3B9EFF),
-                            const Color(0xFF2196F3),
-                          ],
-                        ),
-                      ),
-                      child: Image.asset(
-                        video.thumbnailPath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.play_circle_outline,
-                              size: 60,
-                              color: Colors.white,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                    child:
+                        video.thumbnailPath.isNotEmpty
+                            ? Image.network(
+                              video.thumbnailPath,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildThumbnailPlaceholder();
+                              },
+                            )
+                            : _buildThumbnailPlaceholder(),
                   ),
                 ),
-                // Play button overlay
                 Positioned.fill(
                   child: Center(
                     child: Container(
@@ -579,7 +604,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                     ),
                   ),
                 ),
-                // Duration badge
                 Positioned(
                   bottom: 8,
                   right: 8,
@@ -611,7 +635,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   Text(
                     video.title,
                     style: const TextStyle(
@@ -623,10 +646,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-
                   const SizedBox(height: 8),
-
-                  // Description
                   Text(
                     video.description,
                     style: TextStyle(
@@ -637,14 +657,10 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Action buttons
                   Row(
                     children: [
-                      // Download Notes button
-                      if (video.hasNotes)
+                      if (video.noteUrl != null && video.noteUrl!.isNotEmpty)
                         Expanded(
                           child: GestureDetector(
                             onTap: () => _handleDownloadNotes(video),
@@ -682,11 +698,10 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                             ),
                           ),
                         ),
-
-                      if (video.hasNotes && video.hasPracticeTest)
+                      if (video.noteUrl != null &&
+                          video.noteUrl!.isNotEmpty &&
+                          video.hasPracticeTest)
                         const SizedBox(width: 12),
-
-                      // Practice Test button
                       if (video.hasPracticeTest)
                         Expanded(
                           child: GestureDetector(
@@ -735,18 +750,35 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
       ),
     );
   }
+
+  Widget _buildThumbnailPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [const Color(0xFF3B9EFF), const Color(0xFF2196F3)],
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.play_circle_outline, size: 60, color: Colors.white),
+      ),
+    );
+  }
 }
 
-// Video data model
 class VideoData {
   final String id;
   final String title;
   final String description;
   final String thumbnailPath;
   final String duration;
-  final bool hasNotes;
+  final String? noteUrl;
   final bool hasPracticeTest;
   final String videoUrl;
+  final int likes;
+  final String views;
+  final bool isLiked;
 
   VideoData({
     required this.id,
@@ -754,8 +786,11 @@ class VideoData {
     required this.description,
     required this.thumbnailPath,
     required this.duration,
-    required this.hasNotes,
+    this.noteUrl,
     required this.hasPracticeTest,
     required this.videoUrl,
+    this.likes = 0,
+    this.views = '0',
+    this.isLiked = false,
   });
 }
