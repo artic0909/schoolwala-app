@@ -6,6 +6,7 @@ import '../screens/myvideos_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/payment_screen.dart';
 import '../services/auth_service.dart';
+import '../services/student_service.dart';
 
 class MyChaptersScreen extends StatefulWidget {
   final SubjectData subject;
@@ -24,10 +25,59 @@ class MyChaptersScreen extends StatefulWidget {
 class _MyChaptersScreenState extends State<MyChaptersScreen> {
   String? _profileImageUrl;
 
+  // Dynamic chapters loaded from backend
+  List<ChapterData> _chapters = [];
+  bool _isLoadingChapters = true;
+  String? _chaptersError;
+
   @override
   void initState() {
     super.initState();
     _loadProfileImage();
+    _loadChapters();
+  }
+
+  Future<void> _loadChapters() async {
+    final result = await StudentService.getChapters(widget.subject.id);
+    if (result['success'] && mounted) {
+      try {
+        final data = result['data'];
+        final List<dynamic> list = data['chapters'] ?? [];
+
+        _chapters =
+            list.asMap().entries.map((entry) {
+              int index = entry.key;
+              var item = entry.value;
+
+              return ChapterData(
+                id: item['id']?.toString() ?? '',
+                number: index + 1, // Generate sequential number
+                title: item['name'] ?? '', // Map 'name' from backend to 'title'
+                videoCount:
+                    item['videos_count'] ??
+                    0, // Using count from updated backend
+              );
+            }).toList();
+
+        if (_chapters.isEmpty) {
+          _chaptersError = 'No chapters found for this subject.';
+        }
+
+        setState(() {
+          _isLoadingChapters = false;
+        });
+      } catch (e) {
+        setState(() {
+          _chaptersError = 'Error parsing chapters: $e';
+          _isLoadingChapters = false;
+        });
+      }
+    } else {
+      setState(() {
+        _chaptersError = result['message'] ?? 'Failed to load chapters';
+        _isLoadingChapters = false;
+      });
+    }
   }
 
   Future<void> _loadProfileImage() async {
@@ -410,22 +460,8 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Chapters list
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: chapters.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: ChapterListItem(
-                              chapter: chapters[index],
-                              color: widget.subject.colors[0],
-                              onTap: () => _handleChapterTap(chapters[index]),
-                            ),
-                          );
-                        },
-                      ),
+                      // Chapters list loading logic
+                      _buildChapterContent(),
                     ],
                   ),
                 ),
@@ -434,6 +470,43 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildChapterContent() {
+    if (_isLoadingChapters) {
+      return const Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_chaptersError != null) {
+      return Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Center(child: Text(_chaptersError!)),
+      );
+    }
+    if (_chapters.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Center(child: Text('No chapters available')),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _chapters.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ChapterListItem(
+            chapter: _chapters[index],
+            color: widget.subject.colors[0],
+            onTap: () => _handleChapterTap(_chapters[index]),
+          ),
+        );
+      },
     );
   }
 
@@ -475,11 +548,13 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
 
 // Chapter data model
 class ChapterData {
+  final String id;
   final int number;
   final String title;
   final int videoCount;
 
   ChapterData({
+    this.id = '',
     required this.number,
     required this.title,
     required this.videoCount,

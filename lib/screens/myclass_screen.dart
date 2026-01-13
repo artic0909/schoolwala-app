@@ -6,6 +6,7 @@ import '../widgets/feature_card.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
+import '../services/student_service.dart';
 
 class MyClassScreen extends StatefulWidget {
   final String studentName;
@@ -19,10 +20,17 @@ class MyClassScreen extends StatefulWidget {
 class _MyClassScreenState extends State<MyClassScreen> {
   String? _profileImageUrl;
 
+  // Dynamic subjects loaded from backend
+  List<SubjectData> _subjects = [];
+  bool _isLoadingSubjects = true;
+  String? _subjectsError;
+  String _className = '';
+
   @override
   void initState() {
     super.initState();
     _loadProfileImage();
+    _loadSubjects();
   }
 
   Future<void> _loadProfileImage() async {
@@ -38,63 +46,105 @@ class _MyClassScreenState extends State<MyClassScreen> {
     }
   }
 
-  // Sample subjects data - will be dynamic later
-  final List<SubjectData> subjects = [
-    SubjectData(
-      name: 'সাহিত্যমালা',
-      englishName: 'Sahityamala',
-      description:
-          'Build strong foundation in concepts with interactive problems and visual learning.',
-      icon: Icons.translate,
-      imagePath: 'assets/images/1.jpeg',
-      colors: [Color(0xFFFF6B6B), Color(0xFFEE5A6F)],
-    ),
-    SubjectData(
-      name: 'BLOSSOM',
-      englishName: 'Blossom',
-      description:
-          'Build strong foundation in concepts with interactive problems and visual learning.',
-      icon: Icons.book,
-      imagePath: 'assets/images/2.jpeg',
-      colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)],
-    ),
-    SubjectData(
-      name: 'গণিতগুঞ্জ',
-      englishName: 'Ganitgunja',
-      description:
-          'Build strong foundation in concepts with interactive problems and visual learning.',
-      icon: Icons.calculate,
-      imagePath: 'assets/images/3.jpeg',
-      colors: [Color(0xFF5F27CD), Color(0xFF341F97)],
-    ),
-    SubjectData(
-      name: 'Science',
-      englishName: 'Science',
-      description:
-          'Build strong foundation in concepts with interactive problems and visual learning.',
-      icon: Icons.science,
-      imagePath: 'assets/images/4.jpeg',
-      colors: [Color(0xFF00B894), Color(0xFF00A885)],
-    ),
-    SubjectData(
-      name: 'English',
-      englishName: 'English',
-      description:
-          'Build strong foundation in concepts with interactive problems and visual learning.',
-      icon: Icons.abc,
-      imagePath: 'assets/images/5.jpeg',
-      colors: [Color(0xFF0984E3), Color(0xFF0652DD)],
-    ),
-    SubjectData(
-      name: 'Social Studies',
-      englishName: 'Social Studies',
-      description:
-          'Build strong foundation in concepts with interactive problems and visual learning.',
-      icon: Icons.public,
-      imagePath: 'assets/images/6.jpeg',
-      colors: [Color(0xFFFD79A8), Color(0xFFE84393)],
-    ),
-  ];
+  Future<void> _loadSubjects() async {
+    final result = await StudentService.getMyClass();
+    if (result['success'] && mounted) {
+      try {
+        final data = result['data'];
+        List<dynamic> list = [];
+
+        if (data is Map) {
+          if (data.containsKey('name')) {
+            _className = data['name']?.toString() ?? '';
+          }
+
+          if (data.containsKey('subjects')) {
+            list = data['subjects'] ?? [];
+          } else if (data.containsKey('data') &&
+              data['data'] is Map &&
+              data['data'].containsKey('subjects')) {
+            // Handle if data is nested inside another data key
+            if (data['data'].containsKey('name')) {
+              _className = data['data']['name']?.toString() ?? '';
+            }
+            list = data['data']['subjects'] ?? [];
+          } else if (data.containsKey('data') && data['data'] is List) {
+            list = data['data'];
+          }
+        } else if (data is List) {
+          list = data;
+        }
+
+        // Predefined fallback assets for round-robin assignment
+        final List<String> fallbackImages = [
+          'assets/images/1.jpeg',
+          'assets/images/2.jpeg',
+          'assets/images/3.jpeg',
+          'assets/images/4.jpeg',
+          'assets/images/5.jpeg',
+          'assets/images/6.jpeg',
+        ];
+
+        final List<List<Color>> fallbackColors = [
+          [Color(0xFFFF6B6B), Color(0xFFEE5A6F)],
+          [Color(0xFF4ECDC4), Color(0xFF44A08D)],
+          [Color(0xFF5F27CD), Color(0xFF341F97)],
+          [Color(0xFF00B894), Color(0xFF00A885)],
+          [Color(0xFF0984E3), Color(0xFF0652DD)],
+          [Color(0xFFFD79A8), Color(0xFFE84393)],
+        ];
+
+        final List<IconData> fallbackIcons = [
+          Icons.translate,
+          Icons.book,
+          Icons.calculate,
+          Icons.science,
+          Icons.abc,
+          Icons.public,
+        ];
+
+        _subjects =
+            list.asMap().entries.map((entry) {
+              int index = entry.key;
+              var item = entry.value;
+
+              // Use modulo to cycle through local assets
+              int assetIndex = index % fallbackImages.length;
+
+              return SubjectData(
+                id: item['id']?.toString() ?? '',
+                name: item['name'] ?? '',
+                englishName:
+                    item['name'] ??
+                    '', // Fallback to name as english_name is missing
+                description:
+                    'Build strong foundation in concepts with interactive problems and visual learning.', // Fixed description
+                icon: fallbackIcons[assetIndex],
+                imagePath: fallbackImages[assetIndex], // Use local asset
+                colors: fallbackColors[assetIndex],
+              );
+            }).toList();
+
+        if (_subjects.isEmpty) {
+          _subjectsError = 'No subjects found for your class.';
+        }
+
+        setState(() {
+          _isLoadingSubjects = false;
+        });
+      } catch (e) {
+        setState(() {
+          _subjectsError = 'Error loading subjects: $e';
+          _isLoadingSubjects = false;
+        });
+      }
+    } else {
+      setState(() {
+        _subjectsError = result['message'] ?? 'Failed to load subjects';
+        _isLoadingSubjects = false;
+      });
+    }
+  }
 
   final List<CurriculumFeature> curriculumFeatures = [
     CurriculumFeature(
@@ -371,9 +421,9 @@ class _MyClassScreenState extends State<MyClassScreen> {
                         ),
                       ],
                     ),
-                    child: const Text(
-                      'Class 8',
-                      style: TextStyle(
+                    child: Text(
+                      _className.isNotEmpty ? _className : 'Class',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -412,6 +462,18 @@ class _MyClassScreenState extends State<MyClassScreen> {
                               ? 2
                               : 1;
 
+                      if (_isLoadingSubjects) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (_subjectsError != null) {
+                        return Center(child: Text(_subjectsError!));
+                      }
+                      if (_subjects.isEmpty) {
+                        return const Center(
+                          child: Text('No subjects available'),
+                        );
+                      }
+
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -421,11 +483,11 @@ class _MyClassScreenState extends State<MyClassScreen> {
                           mainAxisSpacing: 16,
                           childAspectRatio: 1.1,
                         ),
-                        itemCount: subjects.length,
+                        itemCount: _subjects.length,
                         itemBuilder: (context, index) {
                           return SubjectCard(
-                            subject: subjects[index],
-                            onTap: () => _handleSubjectTap(subjects[index]),
+                            subject: _subjects[index],
+                            onTap: () => _handleSubjectTap(_subjects[index]),
                           );
                         },
                       );
@@ -560,6 +622,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
 
 // Data models
 class SubjectData {
+  final String id;
   final String name;
   final String englishName;
   final String description;
@@ -568,6 +631,7 @@ class SubjectData {
   final List<Color> colors;
 
   SubjectData({
+    required this.id,
     required this.name,
     required this.englishName,
     required this.description,
