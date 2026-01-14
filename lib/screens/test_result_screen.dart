@@ -9,12 +9,18 @@ class TestResultScreen extends StatefulWidget {
   final List<Question> questions;
   final String videoId;
   final Map<String, String> studentAnswers;
+  final bool isViewOnly;
+  final int? score;
+  final int? totalQuestions;
 
   const TestResultScreen({
     super.key,
     required this.questions,
     required this.videoId,
     required this.studentAnswers,
+    this.isViewOnly = false,
+    this.score,
+    this.totalQuestions,
   });
 
   @override
@@ -30,7 +36,13 @@ class _TestResultScreenState extends State<TestResultScreen> {
   @override
   void initState() {
     super.initState();
-    _submitTest();
+    if (widget.isViewOnly) {
+      _isSubmitting = false;
+      _score = widget.score ?? 0;
+      _totalQuestions = widget.totalQuestions ?? widget.questions.length;
+    } else {
+      _submitTest();
+    }
   }
 
   Future<void> _submitTest() async {
@@ -180,7 +192,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            '$totalPoints / ${totalQuestions * 10}',
+                            '$totalPoints / ${totalQuestions * 2}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 48,

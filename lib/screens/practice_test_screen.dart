@@ -155,267 +155,254 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
         _questions.where((q) => q.selectedOptionIndex != null).length;
     double progress = answeredCount / _questions.length;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.darkNavy),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title Header
-            Container(
-              alignment: Alignment.center,
-              child: Column(
-                children: [
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      children: [
-                        const TextSpan(
-                          text: 'Practice Test: ',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkNavy,
-                            fontFamily: 'Roboto',
-                          ),
-                        ),
-                        TextSpan(
-                          text:
-                              _videoTitle.isNotEmpty
-                                  ? _videoTitle
-                                  : widget.videoTitle,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkNavy,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Test your knowledge with these questions!\\nChoose the correct answers and see how well you understand the concepts.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.textGray,
-                      fontSize: 13,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Stats Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildStatBadge(
-                    Icons.help_outline,
-                    '${_questions.length} Questions',
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatBadge(Icons.access_time, 'Estimated time: 10 mins'),
-                  const SizedBox(width: 8),
-                  _buildStatBadge(
-                    Icons.emoji_events_outlined,
-                    'Earn ${_questions.length * 10} points',
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Progress Bar
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title Header
+          Container(
+            alignment: Alignment.center,
+            child: Column(
+              children: [
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
                     children: [
-                      const Text(
-                        'Test Progress',
+                      const TextSpan(
+                        text: 'Practice Test: ',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkNavy,
+                          fontFamily: 'Roboto',
+                        ),
+                      ),
+                      TextSpan(
+                        text:
+                            _videoTitle.isNotEmpty
+                                ? _videoTitle
+                                : widget.videoTitle,
+                        style: const TextStyle(
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: AppColors.darkNavy,
                         ),
                       ),
-                      Text(
-                        '${(progress * 100).toInt()}%',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryOrange,
-                        ),
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.grey[200],
-                      color: AppColors.primaryOrange,
-                      minHeight: 8,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Test your knowledge with these questions!\\nChoose the correct answers and see how well you understand the concepts.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textGray,
+                    fontSize: 13,
+                    height: 1.5,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: 30),
+          const SizedBox(height: 20),
 
-            // Questions List
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _questions.length,
-              itemBuilder: (context, index) {
-                final question = _questions[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 24),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.inputBorder.withOpacity(0.5),
+          // Stats Row
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildStatBadge(
+                  Icons.help_outline,
+                  '${_questions.length} Questions',
+                ),
+                const SizedBox(width: 8),
+                _buildStatBadge(Icons.access_time, 'Estimated time: 10 mins'),
+                const SizedBox(width: 8),
+                _buildStatBadge(
+                  Icons.emoji_events_outlined,
+                  'Earn ${_questions.length * 2} points',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          // Progress Bar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Test Progress',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkNavy,
+                      ),
                     ),
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryOrange,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey[200],
+                    color: AppColors.primaryOrange,
+                    minHeight: 8,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            alignment: Alignment.center,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primaryOrange,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${index + 1}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          // Questions List
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _questions.length,
+            itemBuilder: (context, index) {
+              final question = _questions[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.inputBorder.withOpacity(0.5),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primaryOrange,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${index + 1}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              question.questionText,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkNavy,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      ...List.generate(question.options.length, (optIndex) {
-                        return PracticeTestOption(
-                          text: question.options[optIndex],
-                          indexLabel: String.fromCharCode(
-                            65 + optIndex,
-                          ), // A, B, C...
-                          isSelected: question.selectedOptionIndex == optIndex,
-                          onTap: () {
-                            setState(() {
-                              question.selectedOptionIndex = optIndex;
-                            });
-                          },
-                        );
-                      }),
-                    ],
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            CustomButton(
-              text: 'Submit Test',
-              onPressed: () {
-                // Check if all questions are answered
-                int unansweredCount =
-                    _questions
-                        .where((q) => q.selectedOptionIndex == null)
-                        .length;
-
-                if (unansweredCount > 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Please answer all questions before submitting. ($unansweredCount unanswered)',
-                      ),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                  return;
-                }
-
-                // Prepare answers for submission
-                Map<String, String> answers = {};
-                for (int i = 0; i < _questions.length; i++) {
-                  answers[i.toString()] =
-                      _questions[i].selectedOptionIndex.toString();
-                }
-
-                // Navigate to results screen which will submit to backend
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => TestResultScreen(
-                          questions: _questions,
-                          videoId: widget.videoId,
-                          studentAnswers: answers,
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            question.questionText,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.darkNavy,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    ...List.generate(question.options.length, (optIndex) {
+                      return PracticeTestOption(
+                        text: question.options[optIndex],
+                        indexLabel: String.fromCharCode(
+                          65 + optIndex,
+                        ), // A, B, C...
+                        isSelected: question.selectedOptionIndex == optIndex,
+                        onTap: () {
+                          setState(() {
+                            question.selectedOptionIndex = optIndex;
+                          });
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          CustomButton(
+            text: 'Submit Test',
+            onPressed: () {
+              // Check if all questions are answered
+              int unansweredCount =
+                  _questions.where((q) => q.selectedOptionIndex == null).length;
+
+              if (unansweredCount > 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Please answer all questions before submitting. ($unansweredCount unanswered)',
+                    ),
+                    backgroundColor: Colors.orange,
                   ),
                 );
-              },
-            ),
-            const SizedBox(height: 40),
-          ],
-        ),
+                return;
+              }
+
+              // Prepare answers for submission
+              Map<String, String> answers = {};
+              for (int i = 0; i < _questions.length; i++) {
+                answers[i.toString()] =
+                    _questions[i].selectedOptionIndex.toString();
+              }
+
+              // Navigate to results screen which will submit to backend
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => TestResultScreen(
+                        questions: _questions,
+                        videoId: widget.videoId,
+                        studentAnswers: answers,
+                      ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 40),
+        ],
       ),
     );
   }

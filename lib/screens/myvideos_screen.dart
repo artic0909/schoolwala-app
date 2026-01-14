@@ -7,6 +7,8 @@ import '../screens/practice_test_screen.dart';
 import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
+import '../models/question_model.dart';
+import '../screens/test_result_screen.dart';
 
 class MyVideosScreen extends StatefulWidget {
   final ChapterData chapter;
@@ -108,6 +110,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                 duration: item['duration'] ?? '10:00',
                 noteUrl: item['note_link'],
                 hasPracticeTest: item['has_practice_test'] ?? false,
+                hasSubmittedTest: item['has_submitted_test'] ?? false,
                 videoUrl: item['video_link'] ?? '',
                 likes: item['likes'] ?? 0,
                 views: item['views']?.toString() ?? '0',
@@ -172,6 +175,120 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                 PracticeTestScreen(videoId: video.id, videoTitle: video.title),
       ),
     );
+  }
+
+  Future<void> _handleSeeResult(VideoData video) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final result = await StudentService.getPracticeTest(video.id);
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+
+      if (result['success']) {
+        final data = result['data'];
+        final List<dynamic> questionsData = data['data']['questions'] ?? [];
+        final List<dynamic> optionsData = data['data']['options'] ?? [];
+        final submittedTest = data['data']['submitted_test'];
+
+        List<Question> questions = [];
+        Map<String, String> studentAnswers = {};
+
+        // Parse questions
+        for (int i = 0; i < questionsData.length; i++) {
+          if (i < optionsData.length) {
+            List<String> options = [];
+            if (optionsData[i] is List) {
+              options = List<String>.from(optionsData[i]);
+            } else if (optionsData[i] is String) {
+              options =
+                  optionsData[i]
+                      .toString()
+                      .split(',')
+                      .map((e) => e.trim())
+                      .toList();
+            }
+
+            questions.add(
+              Question(
+                id: i + 1,
+                questionText: questionsData[i].toString(),
+                options: options,
+                correctOptionIndex:
+                    0, // Ignored in result screen (handled by logic)
+              ),
+            );
+          }
+        }
+
+        // Parse answers and score
+        int score = 0;
+        if (submittedTest != null) {
+          score = submittedTest['score'] ?? 0;
+          if (submittedTest['student_answers'] != null) {
+            if (submittedTest['student_answers'] is Map) {
+              studentAnswers = Map<String, String>.from(
+                submittedTest['student_answers'],
+              );
+            } else if (submittedTest['student_answers'] is List) {
+              final list = submittedTest['student_answers'] as List;
+              for (int i = 0; i < list.length; i++) {
+                studentAnswers[i.toString()] = list[i].toString();
+              }
+            } else if (submittedTest['student_answers'] is String) {
+              // Try to decode if it's a raw string
+              try {
+                // You might need dart:convert import if not already there,
+                // but assuming it might be handled or simple string
+              } catch (e) {
+                // ignore
+              }
+            }
+          }
+
+          // Re-hydrate selected options in questions
+          for (int i = 0; i < questions.length; i++) {
+            if (studentAnswers.containsKey(i.toString())) {
+              questions[i].selectedOptionIndex = int.tryParse(
+                studentAnswers[i.toString()]!,
+              );
+            }
+          }
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => TestResultScreen(
+                  questions: questions,
+                  videoId: video.id,
+                  studentAnswers: studentAnswers,
+                  isViewOnly: true,
+                  score: score,
+                ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to load results'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   void _handleVideoTap(VideoData video) {
@@ -701,40 +818,95 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                         const SizedBox(width: 12),
                       if (video.hasPracticeTest)
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () => _handlePracticeTest(video),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(
-                                    0xFF4CAF50,
-                                  ).withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.edit_outlined,
-                                    size: 18,
-                                    color: Color(0xFF4CAF50),
+                          child: Column(
+                            children: [
+                              // First button - Practice or Retake Test
+                              GestureDetector(
+                                onTap: () => _handlePracticeTest(video),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
                                   ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Practice',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF4CAF50),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF4CAF50,
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(
+                                        0xFF4CAF50,
+                                      ).withOpacity(0.3),
+                                      width: 1,
                                     ),
                                   ),
-                                ],
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.edit_outlined,
+                                        size: 18,
+                                        color: Color(0xFF4CAF50),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        video.hasSubmittedTest
+                                            ? 'Again Test'
+                                            : 'Practice',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF4CAF50),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              // Second button - See Result (only if test submitted)
+                              if (video.hasSubmittedTest) ...[
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: () => _handleSeeResult(video),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(
+                                        0xFF2196F3,
+                                      ).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFF2196F3,
+                                        ).withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.assessment_outlined,
+                                          size: 18,
+                                          color: Color(0xFF2196F3),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'Show Result',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF2196F3),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                     ],
@@ -772,6 +944,7 @@ class VideoData {
   final String duration;
   final String? noteUrl;
   final bool hasPracticeTest;
+  final bool hasSubmittedTest;
   final String videoUrl;
   final int likes;
   final String views;
@@ -785,6 +958,7 @@ class VideoData {
     required this.duration,
     this.noteUrl,
     required this.hasPracticeTest,
+    this.hasSubmittedTest = false,
     required this.videoUrl,
     this.likes = 0,
     this.views = '0',
