@@ -8,6 +8,7 @@ import '../screens/practice_test_screen.dart';
 import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
+import '../widgets/global_bottom_bar.dart';
 
 class MyVideosScreen extends StatefulWidget {
   final ChapterData chapter;
@@ -508,6 +509,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
     );
   }
 

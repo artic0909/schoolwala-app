@@ -7,6 +7,7 @@ import '../screens/mychapters_screen.dart';
 import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
+import '../widgets/global_bottom_bar.dart';
 
 class MyClassScreen extends StatefulWidget {
   final String studentName;
@@ -645,6 +646,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
     );
   }
 }

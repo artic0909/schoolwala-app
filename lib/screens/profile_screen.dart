@@ -4,6 +4,7 @@ import 'login_screen.dart';
 import '../widgets/showcase_card.dart';
 import 'profile_edit_screen.dart';
 import '../services/auth_service.dart';
+import '../widgets/global_bottom_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String studentName;
@@ -606,6 +607,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       ),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 0),
     );
   }
 
