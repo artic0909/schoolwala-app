@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../widgets/showcase_card.dart';
 import 'profile_edit_screen.dart';
-import 'logout_animation_screen.dart';
+import 'splash_screen.dart';
 import '../services/auth_service.dart';
 import '../widgets/global_bottom_bar.dart';
 
@@ -450,9 +450,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             if (mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder:
-                                      (context) =>
-                                          const LogoutAnimationScreen(),
+                                  builder: (context) => const SplashScreen(),
                                 ),
                                 (route) => false,
                               );
