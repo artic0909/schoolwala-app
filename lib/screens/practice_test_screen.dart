@@ -200,6 +200,7 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -208,7 +209,30 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body:
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Bottom background image with fade
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: ShaderMask(
+              shaderCallback: (rect) {
+                return const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.white],
+                ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
+              },
+              blendMode: BlendMode.dstIn,
+              child: Image.asset(
+                'assets/images/1.jpeg',
+                fit: BoxFit.cover,
+                height: 300,
+              ),
+            ),
+          ),
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _errorMessage != null
@@ -242,6 +266,8 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                 ),
               )
               : _buildTestContent(),
+        ],
+      ),
       bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
     );
   }
@@ -256,7 +282,7 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
     double progress = answeredCount / _questions.length;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
