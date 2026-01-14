@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_constants.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/myclass_screen.dart';
@@ -156,14 +157,40 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
     );
   }
 
-  void _handleDownloadNotes(VideoData video) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Downloading notes for: ${video.title}'),
-        backgroundColor: const Color(0xFF3B9EFF),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+  Future<void> _handleDownloadNotes(VideoData video) async {
+    final String? noteUrl = video.noteUrl;
+    if (noteUrl == null || noteUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No notes available for this video.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final Uri uri = Uri.parse(noteUrl);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not launch notes link: $noteUrl'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error launching link: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _handlePracticeTest(VideoData video) {
