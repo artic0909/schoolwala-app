@@ -67,16 +67,28 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                 ? Map<String, dynamic>.from(rawSubmittedTest)
                 : null;
 
+        // Parse student answers robustly
+        Map<String, dynamic> studentAnswersMap = {};
+        if (submittedTest != null && submittedTest['student_answers'] != null) {
+          dynamic rawAnswers = submittedTest['student_answers'];
+          if (rawAnswers is String) {
+            try {
+              rawAnswers = json.decode(rawAnswers);
+            } catch (e) {
+              rawAnswers = {};
+            }
+          }
+
+          if (rawAnswers is List) {
+            for (int i = 0; i < rawAnswers.length; i++) {
+              studentAnswersMap[i.toString()] = rawAnswers[i];
+            }
+          } else if (rawAnswers is Map) {
+            studentAnswersMap = Map<String, dynamic>.from(rawAnswers);
+          }
+        }
         final Map<String, dynamic>? studentAnswers =
-            (submittedTest != null && submittedTest['student_answers'] != null)
-                ? (submittedTest['student_answers'] is String
-                    ? Map<String, dynamic>.from(
-                      json.decode(submittedTest['student_answers']),
-                    )
-                    : Map<String, dynamic>.from(
-                      submittedTest['student_answers'],
-                    ))
-                : null;
+            studentAnswersMap.isEmpty ? null : studentAnswersMap;
 
         _videoTitle = data['data']['video_title'] ?? widget.videoTitle;
 
@@ -98,26 +110,34 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
             }
 
             int correctIdx = 0;
+            String? rawCorrect;
             if (correctAnswersMap.containsKey(i.toString())) {
-              final correctText =
-                  correctAnswersMap[i.toString()]
-                      .toString()
-                      .trim()
-                      .toLowerCase();
-              correctIdx = questionOptions.indexWhere(
-                (opt) => opt.trim().toLowerCase() == correctText,
-              );
+              rawCorrect = correctAnswersMap[i.toString()].toString();
+              final cText = rawCorrect.trim().toLowerCase();
+
+              // Robust matching
+              correctIdx = questionOptions.indexWhere((opt) {
+                final oText = opt.trim().toLowerCase();
+                return oText == cText ||
+                    oText.contains(cText) ||
+                    cText.contains(oText);
+              });
               if (correctIdx == -1) correctIdx = 0;
             }
 
             int? selectedIdx;
-            if (studentAnswers != null &&
-                studentAnswers[i.toString()] != null) {
-              final selectedText =
-                  studentAnswers[i.toString()].toString().trim().toLowerCase();
-              selectedIdx = questionOptions.indexWhere(
-                (opt) => opt.trim().toLowerCase() == selectedText,
-              );
+            String? rawStudent;
+            if (studentAnswersMap.isNotEmpty &&
+                studentAnswersMap[i.toString()] != null) {
+              rawStudent = studentAnswersMap[i.toString()].toString();
+              final sText = rawStudent.trim().toLowerCase();
+
+              selectedIdx = questionOptions.indexWhere((opt) {
+                final oText = opt.trim().toLowerCase();
+                return oText == sText ||
+                    oText.contains(sText) ||
+                    sText.contains(oText);
+              });
             }
 
             loadedQuestions.add(
@@ -127,6 +147,8 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                 options: questionOptions,
                 correctOptionIndex: correctIdx,
                 selectedOptionIndex: selectedIdx,
+                rawCorrectAnswer: rawCorrect,
+                rawStudentAnswer: rawStudent,
               ),
             );
           }

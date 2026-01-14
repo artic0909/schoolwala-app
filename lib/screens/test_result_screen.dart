@@ -75,11 +75,16 @@ class _TestResultScreenState extends State<TestResultScreen> {
         for (int i = 0; i < widget.questions.length; i++) {
           final correctAnsText = correctAnswersMap[i.toString()];
           if (correctAnsText != null) {
-            final String targetText =
-                correctAnsText.toString().trim().toLowerCase();
-            final correctIdx = widget.questions[i].options.indexWhere(
-              (opt) => opt.trim().toLowerCase() == targetText,
-            );
+            final String rawText = correctAnsText.toString();
+            widget.questions[i].rawCorrectAnswer = rawText;
+
+            final String targetText = rawText.trim().toLowerCase();
+            final correctIdx = widget.questions[i].options.indexWhere((opt) {
+              final oText = opt.trim().toLowerCase();
+              return oText == targetText ||
+                  oText.contains(targetText) ||
+                  targetText.contains(oText);
+            });
             if (correctIdx != -1) {
               widget.questions[i].correctOptionIndex = correctIdx;
             }
@@ -130,8 +135,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: AppColors.darkNavy),
-          onPressed:
-              () => Navigator.of(context).popUntil((route) => route.isFirst),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body:
@@ -252,9 +256,6 @@ class _TestResultScreenState extends State<TestResultScreen> {
                       itemCount: widget.questions.length,
                       itemBuilder: (context, index) {
                         final question = widget.questions[index];
-                        final isCorrect =
-                            question.selectedOptionIndex ==
-                            question.correctOptionIndex;
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 24),
@@ -269,37 +270,14 @@ class _TestResultScreenState extends State<TestResultScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          isCorrect ? Colors.green : Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      isCorrect ? Icons.check : Icons.close,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      question.questionText,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.darkNavy,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                question.questionText,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.darkNavy,
+                                  height: 1.4,
+                                ),
                               ),
                               const SizedBox(height: 20),
                               ...List.generate(question.options.length, (
@@ -314,15 +292,55 @@ class _TestResultScreenState extends State<TestResultScreen> {
                                       question.selectedOptionIndex == optIndex,
                                   onTap: () {}, // No interaction in result
                                   showResult: true,
-                                  isCorrectAnswer:
-                                      optIndex == question.correctOptionIndex,
-                                  isWrongAnswer:
-                                      (question.selectedOptionIndex ==
-                                          optIndex) &&
-                                      (question.selectedOptionIndex !=
-                                          question.correctOptionIndex),
                                 );
                               }),
+
+                              const SizedBox(height: 12),
+
+                              // Correct Answer Indicator
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppColors.inputBorder.withOpacity(
+                                      0.5,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF1F7FF),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.check,
+                                        color: Color(0xFF3B9EFF),
+                                        size: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Correct : ${question.rawCorrectAnswer ?? (question.correctOptionIndex < question.options.length ? question.options[question.correctOptionIndex] : "N/A")}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.darkNavy,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -334,9 +352,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
                     CustomButton(
                       text: 'Back to Home',
                       onPressed: () {
-                        Navigator.of(
-                          context,
-                        ).popUntil((route) => route.isFirst);
+                        Navigator.of(context).pop();
                       },
                     ),
                     const SizedBox(height: 20),

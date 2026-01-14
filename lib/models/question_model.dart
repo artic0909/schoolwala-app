@@ -4,6 +4,8 @@ class Question {
   final List<String> options;
   int correctOptionIndex;
   int? selectedOptionIndex;
+  String? rawCorrectAnswer;
+  String? rawStudentAnswer;
 
   Question({
     required this.id,
@@ -11,5 +13,7 @@ class Question {
     required this.options,
     required this.correctOptionIndex,
     this.selectedOptionIndex,
+    this.rawCorrectAnswer,
+    this.rawStudentAnswer,
   });
 }

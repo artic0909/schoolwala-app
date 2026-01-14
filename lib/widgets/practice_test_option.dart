@@ -31,27 +31,11 @@ class PracticeTestOption extends StatelessWidget {
     Color labelColor = AppColors.primaryOrange;
     Color labelBgColor = AppColors.primaryOrange.withOpacity(0.1);
 
-    if (showResult) {
-      if (isCorrectAnswer) {
-        borderColor = Colors.green;
-        backgroundColor = Colors.green.withOpacity(0.05);
-        textColor = Colors.green[800]!;
-        labelColor = Colors.white;
-        labelBgColor = Colors.green;
-      } else if (isWrongAnswer) {
-        borderColor = Colors.red;
-        backgroundColor = Colors.red.withOpacity(0.05);
-        textColor = Colors.red[800]!;
-        labelColor = Colors.white;
-        labelBgColor = Colors.red;
-      }
-    } else {
-      if (isSelected) {
-        borderColor = AppColors.primaryOrange;
-        backgroundColor = AppColors.primaryOrange.withOpacity(0.05);
-        labelColor = Colors.white;
-        labelBgColor = AppColors.primaryOrange;
-      }
+    if (isSelected) {
+      borderColor = AppColors.primaryOrange;
+      backgroundColor = AppColors.primaryOrange.withOpacity(0.05);
+      labelColor = Colors.white;
+      labelBgColor = AppColors.primaryOrange;
     }
 
     return GestureDetector(
@@ -100,10 +84,6 @@ class PracticeTestOption extends StatelessWidget {
                 ),
               ),
             ),
-            if (showResult && isCorrectAnswer)
-              const Icon(Icons.check_circle, color: Colors.green),
-            if (showResult && isWrongAnswer)
-              const Icon(Icons.cancel, color: Colors.red),
           ],
         ),
       ),
