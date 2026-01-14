@@ -275,6 +275,7 @@ class AuthService {
   }) async {
     try {
       final headers = await getAuthHeaders();
+      headers.remove('Content-Type'); // Important for multipart
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${ApiConstants.baseUrl}/student/profile/update'),

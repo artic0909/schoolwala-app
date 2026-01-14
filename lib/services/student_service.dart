@@ -30,7 +30,7 @@ class StudentService {
       final headers = await AuthService.getAuthHeaders();
       final response = await http.post(
         Uri.parse(ApiConstants.updateProfileEndpoint),
-        body: data,
+        body: json.encode(data),
         headers: headers,
       );
       if (response.statusCode == 200) {
@@ -52,11 +52,11 @@ class StudentService {
       final headers = await AuthService.getAuthHeaders();
       final response = await http.post(
         Uri.parse(ApiConstants.changePasswordEndpoint),
-        body: {
+        body: json.encode({
           'current_password': currentPassword,
           'new_password': newPassword,
           'new_password_confirmation': confirmPassword,
-        },
+        }),
         headers: headers,
       );
 
@@ -167,7 +167,7 @@ class StudentService {
       final headers = await AuthService.getAuthHeaders();
       final response = await http.post(
         Uri.parse(ApiConstants.likeVideoEndpoint),
-        body: {'video_id': videoId},
+        body: json.encode({'video_id': videoId}),
         headers: headers,
       );
       if (response.statusCode == 200) {
@@ -183,12 +183,17 @@ class StudentService {
   static Future<Map<String, dynamic>> submitFeedback(
     String videoId,
     String feedback,
+    int rating,
   ) async {
     try {
       final headers = await AuthService.getAuthHeaders();
       final response = await http.post(
         Uri.parse(ApiConstants.feedbackEndpoint),
-        body: {'video_id': videoId, 'feedback': feedback},
+        body: json.encode({
+          'video_id': videoId,
+          'feedback': feedback,
+          'rating': rating,
+        }),
         headers: headers,
       );
       if (response.statusCode == 200) {
@@ -247,6 +252,7 @@ class StudentService {
   ) async {
     try {
       final headers = await AuthService.getAuthHeaders();
+      headers.remove('Content-Type'); // Important for multipart requests
       final uri = Uri.parse(ApiConstants.paymentStoreEndpoint);
 
       var request = http.MultipartRequest('POST', uri);

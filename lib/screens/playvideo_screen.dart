@@ -104,29 +104,6 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
     }
   }
 
-  Future<void> _handleDownloadNotes() async {
-    if (widget.video.noteUrl == null || widget.video.noteUrl!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No notes available for this video')),
-      );
-      return;
-    }
-
-    final url = widget.video.noteUrl!;
-    // TODO: Use url_launcher to open the link
-    // if (await canLaunchUrl(Uri.parse(url))) {
-    //   await launchUrl(Uri.parse(url));
-    // }
-
-    debugPrint('Opening notes: $url');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening notes: $url'),
-        backgroundColor: const Color(0xFF3B9EFF),
-      ),
-    );
-  }
-
   Future<void> _handleSubmitFeedback() async {
     if (_selectedRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -141,8 +118,8 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
 
     final result = await StudentService.submitFeedback(
       widget.video.id,
-      _feedbackController
-          .text, // You might need to send rating too if API supports it
+      _feedbackController.text,
+      _selectedRating,
     );
 
     if (!mounted) return;
@@ -246,21 +223,56 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                               color: AppColors.textGray,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          const Icon(
-                            Icons.thumb_up_outlined,
-                            size: 16,
-                            color: AppColors.textGray,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.video.likes} likes',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textGray,
+                          const SizedBox(width: 24),
+
+                          // Interactive Like Button
+                          GestureDetector(
+                            onTap: _handleLike,
+                            child: Row(
+                              children: [
+                                TweenAnimationBuilder(
+                                  tween: Tween<double>(
+                                    begin: 1.0,
+                                    end: _isLiked ? 1.2 : 1.0,
+                                  ),
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.elasticOut,
+                                  builder: (context, double scale, child) {
+                                    return Transform.scale(
+                                      scale: scale,
+                                      child: Icon(
+                                        _isLiked
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        size: 20, // Slightly larger
+                                        color:
+                                            _isLiked
+                                                ? Colors.red
+                                                : AppColors.textGray,
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${widget.video.likes + (_isLiked ? 1 : 0)} likes', // Optimistic count
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight:
+                                        _isLiked
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                    color:
+                                        _isLiked
+                                            ? Colors.red
+                                            : AppColors.textGray,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 16),
+
+                          const SizedBox(width: 24),
                           const Icon(
                             Icons.access_time,
                             size: 16,
@@ -276,106 +288,6 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 20),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          // Like Button
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: _handleLike,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      _isLiked
-                                          ? AppColors.primaryOrange
-                                          : AppColors.primaryOrange.withOpacity(
-                                            0.1,
-                                          ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: AppColors.primaryOrange,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      _isLiked
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      size: 20,
-                                      color:
-                                          _isLiked
-                                              ? Colors.white
-                                              : AppColors.primaryOrange,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Like this video',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color:
-                                            _isLiked
-                                                ? Colors.white
-                                                : AppColors.primaryOrange,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Only show note download if available
-                      if (widget.video.noteUrl != null &&
-                          widget.video.noteUrl!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: GestureDetector(
-                            onTap: _handleDownloadNotes,
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF3B9EFF).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(0xFF3B9EFF),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.download_outlined,
-                                    size: 20,
-                                    color: Color(0xFF3B9EFF),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Download Notes',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF3B9EFF),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
 
                       const SizedBox(height: 24),
 
