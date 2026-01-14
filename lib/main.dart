@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/splash_screen.dart';
 
-void main() {
+import 'services/auth_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Initialize services
+  await AuthService.init();
+
   // Set status bar and navigation bar colors
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -14,7 +19,7 @@ void main() {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  
+
   runApp(const SchoolwalaApp());
 }
 

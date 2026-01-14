@@ -116,7 +116,9 @@ class _SplashScreenState extends State<SplashScreen>
         if (user != null) {
           // Try to get name from user object
           // Adjust key based on your actual user object structure
-          if (user.containsKey('name')) {
+          if (user.containsKey('student') && user['student'] is Map) {
+            studentName = user['student']['student_name'] ?? 'Student';
+          } else if (user.containsKey('name')) {
             studentName = user['name'];
           } else if (user.containsKey('student_name')) {
             studentName = user['student_name'];

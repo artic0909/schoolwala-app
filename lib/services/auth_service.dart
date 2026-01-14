@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
@@ -6,6 +7,19 @@ import '../constants/api_constants.dart';
 class AuthService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
+  static final ValueNotifier<Map<String, dynamic>?> userNotifier =
+      ValueNotifier(null);
+
+  // Initialize shared preferences and notifier
+  static Future<void> init() async {
+    final user = await getCurrentUser();
+    if (user != null && !user.containsKey('student')) {
+      // Data migration: wrap old student object in the new nested structure
+      userNotifier.value = {'student': user};
+    } else {
+      userNotifier.value = user;
+    }
+  }
 
   // Get stored token
   static Future<String?> getToken() async {
@@ -43,16 +57,14 @@ class AuthService {
         final data = json.decode(response.body);
 
         // Save Token and User Data
-        if (data['data'] != null && data['data']['token'] != null) {
+        if (data['data'] != null) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_tokenKey, data['data']['token']);
-          print('AuthService: Token saved: ${data['data']['token']}');
-          if (data['data']['student'] != null) {
-            await prefs.setString(
-              _userKey,
-              json.encode(data['data']['student']),
-            );
+          if (data['data']['token'] != null) {
+            await prefs.setString(_tokenKey, data['data']['token']);
+            print('AuthService: Token saved: ${data['data']['token']}');
           }
+          await prefs.setString(_userKey, json.encode(data['data']));
+          userNotifier.value = data['data'];
         }
 
         return {'success': true, 'data': data};
@@ -83,16 +95,13 @@ class AuthService {
         final responseData = json.decode(response.body);
 
         // Save Token and User Data if provided on registration
-        if (responseData['data'] != null &&
-            responseData['data']['token'] != null) {
+        if (responseData['data'] != null) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_tokenKey, responseData['data']['token']);
-          if (responseData['data']['student'] != null) {
-            await prefs.setString(
-              _userKey,
-              json.encode(responseData['data']['student']),
-            );
+          if (responseData['data']['token'] != null) {
+            await prefs.setString(_tokenKey, responseData['data']['token']);
           }
+          await prefs.setString(_userKey, json.encode(responseData['data']));
+          userNotifier.value = responseData['data'];
         }
 
         return {'success': true, 'data': responseData};
@@ -126,6 +135,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
+      userNotifier.value = null;
       return true;
     } catch (e) {
       print('Logout Error: $e');
@@ -156,8 +166,10 @@ class AuthService {
         final data = json.decode(response.body);
         // Update local storage
         if (data['data'] != null) {
+          final user = data['data'];
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_userKey, json.encode(data['data']));
+          await prefs.setString(_userKey, json.encode(user));
+          userNotifier.value = user;
         }
         return {'success': true, 'data': data};
       } else {
@@ -243,6 +255,7 @@ class AuthService {
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
+
   // ===============================================================================================
   // PROFILE METHODS
   // ===============================================================================================
@@ -258,6 +271,13 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final userData = data['data'];
+        if (userData != null) {
+          // Store the whole data map (student, profile, class_details)
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_userKey, json.encode(userData));
+          userNotifier.value = userData;
+        }
         return {'success': true, 'data': data['data']};
       } else {
         return {'success': false, 'message': 'Failed to load profile'};
@@ -303,8 +323,15 @@ class AuthService {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      if (response.statusCode == 200) {
+      if (streamedResponse.statusCode == 200) {
         final data = json.decode(response.body);
+        final userData = data['data'];
+        if (userData != null) {
+          // If updated profile is returned, sync it
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_userKey, json.encode(userData));
+          userNotifier.value = userData;
+        }
         return {'success': true, 'data': data['data']};
       } else {
         return {'success': false, 'message': 'Failed to update profile'};

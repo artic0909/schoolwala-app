@@ -26,8 +26,6 @@ class MyVideosScreen extends StatefulWidget {
 }
 
 class _MyVideosScreenState extends State<MyVideosScreen> {
-  String? _profileImageUrl;
-
   // Dynamic videos loaded from backend
   List<VideoData> _videos = [];
   bool _isLoadingVideos = true;
@@ -42,21 +40,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProfileImage();
     _loadVideos();
-  }
-
-  Future<void> _loadProfileImage() async {
-    final result = await AuthService.getProfile();
-    if (result['success'] && mounted) {
-      final profile = result['data']['profile'];
-      if (profile['profile_image'] != null) {
-        setState(() {
-          _profileImageUrl =
-              'https://schoolwala.info/storage/${profile['profile_image']}';
-        });
-      }
-    }
   }
 
   Future<void> _loadVideos() async {
@@ -144,15 +128,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
         _isLoadingVideos = false;
       });
     }
-  }
-
-  void _handleProfileTap() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProfileScreen(studentName: widget.studentName),
-      ),
-    );
   }
 
   Future<void> _handleDownloadNotes(VideoData video) async {
@@ -287,58 +262,100 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                         ),
                       ),
                       const Spacer(),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            widget.studentName,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.darkNavy,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Student',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textGray.withOpacity(0.8),
-                            ),
-                          ),
-                        ],
+                      ValueListenableBuilder<Map<String, dynamic>?>(
+                        valueListenable: AuthService.userNotifier,
+                        builder: (context, userData, _) {
+                          final student = userData?['student'] ?? userData;
+                          final name =
+                              (student is Map)
+                                  ? (student['student_name'] ??
+                                      widget.studentName)
+                                  : widget.studentName;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.darkNavy,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Student',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textGray.withOpacity(0.8),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
-                        onTap: _handleProfileTap,
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.primaryOrange,
-                              width: 2,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ProfileScreen(
+                                    studentName:
+                                        (AuthService
+                                                .userNotifier
+                                                .value?['student']?['student_name'] ??
+                                            widget.studentName),
+                                  ),
                             ),
-                            image: DecorationImage(
-                              image:
-                                  _profileImageUrl != null
-                                      ? NetworkImage(_profileImageUrl!)
-                                          as ImageProvider
-                                      : const AssetImage(
-                                        'assets/images/profile.jpg',
-                                      ),
-                              fit: BoxFit.cover,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryOrange.withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                          );
+                        },
+                        child: ValueListenableBuilder<Map<String, dynamic>?>(
+                          valueListenable: AuthService.userNotifier,
+                          builder: (context, userData, _) {
+                            final profile = userData?['profile'] ?? userData;
+                            final profileImage =
+                                (profile is Map)
+                                    ? profile['profile_image']
+                                    : null;
+                            final profileImageUrl =
+                                profileImage != null
+                                    ? 'https://schoolwala.info/storage/$profileImage'
+                                    : null;
+
+                            return Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.primaryOrange,
+                                  width: 2,
+                                ),
+                                image: DecorationImage(
+                                  image:
+                                      profileImageUrl != null
+                                          ? NetworkImage(profileImageUrl)
+                                              as ImageProvider
+                                          : const AssetImage(
+                                            'assets/images/profile.jpg',
+                                          ),
+                                  fit: BoxFit.cover,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryOrange.withOpacity(
+                                      0.3,
+                                    ),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                       ),
                     ],

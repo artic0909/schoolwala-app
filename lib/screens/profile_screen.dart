@@ -377,32 +377,46 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                       ),
-                      Center(
-                        child: Container(
-                          width: 110,
-                          height: 110,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFFEAAA93),
-                              width: 3,
+                      ValueListenableBuilder<Map<String, dynamic>?>(
+                        valueListenable: AuthService.userNotifier,
+                        builder: (context, userData, _) {
+                          final currentProfile =
+                              userData?['profile'] ?? profile;
+                          final profileImagePath =
+                              (currentProfile is Map)
+                                  ? currentProfile['profile_image']
+                                  : null;
+                          final profileImageUrl =
+                              profileImagePath != null
+                                  ? 'https://schoolwala.info/storage/$profileImagePath'
+                                  : null;
+
+                          return Center(
+                            child: Container(
+                              width: 110,
+                              height: 110,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFEAAA93),
+                                  width: 3,
+                                ),
+                                image:
+                                    profileImageUrl != null
+                                        ? DecorationImage(
+                                          image: NetworkImage(profileImageUrl),
+                                          fit: BoxFit.cover,
+                                        )
+                                        : const DecorationImage(
+                                          image: AssetImage(
+                                            'assets/images/profile.jpg',
+                                          ),
+                                          fit: BoxFit.cover,
+                                        ),
+                              ),
                             ),
-                            image:
-                                profile['profile_image'] != null
-                                    ? DecorationImage(
-                                      image: NetworkImage(
-                                        'https://schoolwala.info/storage/${profile['profile_image']}',
-                                      ),
-                                      fit: BoxFit.cover,
-                                    )
-                                    : const DecorationImage(
-                                      image: AssetImage(
-                                        'assets/images/profile.jpg',
-                                      ),
-                                      fit: BoxFit.cover,
-                                    ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
 
                       // Animated Badges
@@ -451,14 +465,23 @@ class _ProfileScreenState extends State<ProfileScreen>
               Center(
                 child: Column(
                   children: [
-                    Text(
-                      student['student_name'] ?? 'Student',
-                      style: const TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.darkNavy,
-                      ),
+                    ValueListenableBuilder<Map<String, dynamic>?>(
+                      valueListenable: AuthService.userNotifier,
+                      builder: (context, userData, _) {
+                        final name =
+                            userData?['student']?['student_name'] ??
+                            student['student_name'] ??
+                            'Student';
+                        return Text(
+                          name,
+                          style: const TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.darkNavy,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 8),
                     RichText(
