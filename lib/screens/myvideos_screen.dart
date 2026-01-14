@@ -201,7 +201,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
             pinned: true,
             backgroundColor: Colors.white,
             elevation: 0,
-            toolbarHeight: 80,
+            toolbarHeight: 65,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
               onPressed: () => Navigator.of(context).pop(),

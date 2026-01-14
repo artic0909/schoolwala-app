@@ -88,28 +88,28 @@ class GlobalBottomBar extends StatelessWidget {
         elevation: 0,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
+            icon: Icon(Icons.account_circle_outlined),
+            activeIcon: Icon(Icons.account_circle),
             label: 'Profile',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.info_outline),
-            activeIcon: Icon(Icons.info),
+            icon: Icon(Icons.info_outline_rounded),
+            activeIcon: Icon(Icons.info_rounded),
             label: 'About',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book_outlined),
-            activeIcon: Icon(Icons.book),
+            icon: Icon(Icons.auto_stories_outlined),
+            activeIcon: Icon(Icons.auto_stories_rounded),
             label: 'My Class',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.privacy_tip_outlined),
-            activeIcon: Icon(Icons.privacy_tip),
+            icon: Icon(Icons.verified_user_outlined),
+            activeIcon: Icon(Icons.verified_user_rounded),
             label: 'Privacy',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.support_agent_outlined),
-            activeIcon: Icon(Icons.support_agent),
+            icon: Icon(Icons.support_agent_rounded),
+            activeIcon: Icon(Icons.support_agent_rounded),
             label: 'Support',
           ),
         ],

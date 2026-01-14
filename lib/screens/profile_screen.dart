@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
-import 'login_screen.dart';
 import '../widgets/showcase_card.dart';
 import 'profile_edit_screen.dart';
+import 'logout_animation_screen.dart';
 import '../services/auth_service.dart';
 import '../widgets/global_bottom_bar.dart';
 
@@ -223,134 +223,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ================= Breadcrumb Navigation =================
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.person,
-                      color: AppColors.primaryOrange,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'My Profile',
-                      style: TextStyle(
-                        color: AppColors.primaryOrange,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '/',
-                      style: TextStyle(color: AppColors.textGray),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Update Profile Button
-                    GestureDetector(
-                      onTap: () async {
-                        final result = await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder:
-                                (context) => ProfileEditScreen(
-                                  profileData: _profileData!,
-                                ),
-                          ),
-                        );
-
-                        // Reload profile if updated
-                        if (result == true) {
-                          _loadProfile();
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.primaryOrange),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.edit_square,
-                              color: AppColors.primaryOrange,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Update Profile',
-                              style: TextStyle(
-                                color: AppColors.primaryOrange,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-                    const Text(
-                      '/',
-                      style: TextStyle(color: AppColors.textGray),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Logout Button
-                    GestureDetector(
-                      onTap: () async {
-                        await AuthService.logout();
-                        if (mounted) {
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                            (route) => false,
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.primaryOrange),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.power_settings_new,
-                              color: AppColors.darkNavy,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Logout',
-                              style: TextStyle(
-                                color: AppColors.darkNavy,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 30),
 
               // ================= Profile Avatar Section =================
@@ -505,13 +377,79 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Curious learner exploring the world! Currently in ${classDetails?['name'] ?? 'Class 8'}.',
+                      'Curious learner exploring the world!',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 13,
                         height: 1.4,
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Update Profile Button
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final result = await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ProfileEditScreen(
+                                      profileData: _profileData!,
+                                    ),
+                              ),
+                            );
+                            if (result == true) {
+                              _loadProfile();
+                            }
+                          },
+                          icon: const Icon(Icons.edit_rounded, size: 18),
+                          label: const Text('Update Profile'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryOrange,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Logout Button
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            await AuthService.logout();
+                            if (mounted) {
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) =>
+                                          const LogoutAnimationScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.logout_rounded, size: 18),
+                          label: const Text('Logout'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.redAccent,
+                            side: const BorderSide(color: Colors.redAccent),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

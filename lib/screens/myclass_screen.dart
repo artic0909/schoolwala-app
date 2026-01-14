@@ -226,7 +226,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
             pinned: true,
             backgroundColor: Colors.white,
             elevation: 0,
-            toolbarHeight: 80,
+            toolbarHeight: 65,
             flexibleSpace: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
