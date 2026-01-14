@@ -131,7 +131,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
         final feesData = paymentData['fees'];
 
         if (classData != null) {
-          _className = classData['class_name'] ?? 'Class 8';
+          _className = classData['class_name'] ?? 'Class';
         }
 
         if (feesData != null) {
@@ -181,7 +181,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
             builder:
                 (context) => PaymentScreen(
                   studentName: widget.studentName,
-                  className: _className ?? 'Class 8',
+                  className: _className ?? 'Class',
                   feeId: _feeDetails!['id']?.toString() ?? '',
                   amount: _feeDetails!['amount']?.toString() ?? '0',
                   subjectId: widget.subject.id,
@@ -516,7 +516,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  _className ?? 'Class 8',
+                                  _className ?? 'Class',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,

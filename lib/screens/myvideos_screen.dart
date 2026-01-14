@@ -818,95 +818,64 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                         const SizedBox(width: 12),
                       if (video.hasPracticeTest)
                         Expanded(
-                          child: Column(
-                            children: [
-                              // First button - Practice or Retake Test
-                              GestureDetector(
-                                onTap: () => _handlePracticeTest(video),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF4CAF50,
-                                    ).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF4CAF50,
-                                      ).withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        Icons.edit_outlined,
-                                        size: 18,
-                                        color: Color(0xFF4CAF50),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        video.hasSubmittedTest
-                                            ? 'Again Test'
-                                            : 'Practice',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF4CAF50),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                          child: GestureDetector(
+                            onTap:
+                                () =>
+                                    video.hasSubmittedTest
+                                        ? _handleSeeResult(video)
+                                        : _handlePracticeTest(video),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color:
+                                    video.hasSubmittedTest
+                                        ? const Color(0xFFFFC107).withOpacity(
+                                          0.1,
+                                        ) // Yellow tint
+                                        : const Color(
+                                          0xFF4CAF50,
+                                        ).withOpacity(0.1), // Green tint
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color:
+                                      video.hasSubmittedTest
+                                          ? const Color(0xFFFFC107) // Yellow
+                                          : const Color(0xFF4CAF50), // Green
+                                  width: 1,
                                 ),
                               ),
-                              // Second button - See Result (only if test submitted)
-                              if (video.hasSubmittedTest) ...[
-                                const SizedBox(height: 8),
-                                GestureDetector(
-                                  onTap: () => _handleSeeResult(video),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF2196F3,
-                                      ).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: const Color(
-                                          0xFF2196F3,
-                                        ).withOpacity(0.3),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: const Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.assessment_outlined,
-                                          size: 18,
-                                          color: Color(0xFF2196F3),
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Show Result',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF2196F3),
-                                          ),
-                                        ),
-                                      ],
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    video.hasSubmittedTest
+                                        ? Icons.emoji_events_outlined
+                                        : Icons.edit_outlined,
+                                    size: 18,
+                                    color:
+                                        video.hasSubmittedTest
+                                            ? const Color(
+                                              0xFFFFB300,
+                                            ) // Darker yellow for visibility
+                                            : const Color(0xFF4CAF50),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    video.hasSubmittedTest
+                                        ? 'Show Result'
+                                        : 'Practice',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          video.hasSubmittedTest
+                                              ? const Color(0xFFFFB300)
+                                              : const Color(0xFF4CAF50),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ],
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                     ],
