@@ -74,7 +74,11 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
               return ChapterData(
                 id: item['id']?.toString() ?? '',
                 number: item['chapter_index'] ?? (index + 1),
-                title: item['chapter_name'] ?? '',
+                title:
+                    (item['chapter_name'] != null &&
+                            item['chapter_name'].toString().isNotEmpty)
+                        ? item['chapter_name']
+                        : 'Chapter ${item['chapter_index'] ?? (index + 1)}',
                 videoCount: item['videos_count'] ?? 0,
                 isLocked: item['is_locked'] ?? false,
               );

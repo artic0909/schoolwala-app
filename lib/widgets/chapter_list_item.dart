@@ -84,6 +84,8 @@ class ChapterListItem extends StatelessWidget {
               color: AppColors.darkNavy,
               height: 1.3,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
 
           const SizedBox(height: 8),
