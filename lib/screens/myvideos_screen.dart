@@ -253,9 +253,16 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
           // Re-hydrate selected options in questions
           for (int i = 0; i < questions.length; i++) {
             if (studentAnswers.containsKey(i.toString())) {
-              questions[i].selectedOptionIndex = int.tryParse(
-                studentAnswers[i.toString()]!,
-              );
+              final storedAnswer = studentAnswers[i.toString()];
+              if (storedAnswer != null) {
+                // Find index of the stored answer string in the options list
+                final index = questions[i].options.indexWhere(
+                  (option) => option == storedAnswer,
+                );
+                if (index != -1) {
+                  questions[i].selectedOptionIndex = index;
+                }
+              }
             }
           }
         }

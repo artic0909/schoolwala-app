@@ -381,10 +381,15 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
               }
 
               // Prepare answers for submission
+              // Prepare answers map
               Map<String, String> answers = {};
               for (int i = 0; i < _questions.length; i++) {
-                answers[i.toString()] =
-                    _questions[i].selectedOptionIndex.toString();
+                if (_questions[i].selectedOptionIndex != null) {
+                  // Send the actual text of the answer instead of index
+                  // because backend expects string to compare with correct_answers
+                  answers[i.toString()] =
+                      _questions[i].options[_questions[i].selectedOptionIndex!];
+                }
               }
 
               // Navigate to results screen which will submit to backend

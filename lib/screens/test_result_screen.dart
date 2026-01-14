@@ -201,7 +201,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'You answered $correctAnswers out of $totalQuestions correctly',
+                            'You answered $correctAnswers out of $totalQuestions questions',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
