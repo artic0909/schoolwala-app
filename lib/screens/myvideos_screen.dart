@@ -107,10 +107,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                 thumbnailPath: thumbnailUrl,
                 duration: item['duration'] ?? '10:00',
                 noteUrl: item['note_link'],
-                hasPracticeTest:
-                    item['questions'] != null &&
-                    item['questions'].toString() != '[]' &&
-                    item['questions'].toString() != 'null',
+                hasPracticeTest: item['has_practice_test'] ?? false,
                 videoUrl: item['video_link'] ?? '',
                 likes: item['likes'] ?? 0,
                 views: item['views']?.toString() ?? '0',

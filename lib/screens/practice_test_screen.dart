@@ -3,6 +3,7 @@ import '../constants/app_constants.dart';
 import '../models/question_model.dart';
 import '../widgets/practice_test_option.dart';
 import '../widgets/custom_button.dart';
+import '../services/student_service.dart';
 import 'test_result_screen.dart';
 
 class PracticeTestScreen extends StatefulWidget {
@@ -20,54 +21,135 @@ class PracticeTestScreen extends StatefulWidget {
 }
 
 class _PracticeTestScreenState extends State<PracticeTestScreen> {
-  // Sample Data (mimicking the image)
-  final List<Question> _questions = [
-    Question(
-      id: 1,
-      questionText:
-          '"বোঝাপড়া" কবিতাটি রবীন্দ্রনাথ ঠাকুরের কোন কাব্যগ্রন্থের অন্তর্গত?',
-      options: ['গীতাঞ্জলি', 'মানসী', 'ক্ষণিকা', 'বলাকা'],
-      correctOptionIndex: 2, // Assuming 'ক্ষণিকা'
-    ),
-    Question(
-      id: 2,
-      questionText: '"বোঝাপড়া" কবিতায় কবি কী মেনে নেওয়ার কথা বলেছেন?',
-      options: [
-        'জীবনের দুঃখ-কষ্ট',
-        'মানুষের পরিবর্তনশীলতা',
-        'ভাগ্যের নির্মম পরিহাস',
-        'উপরের সবগুলি',
-      ],
-      correctOptionIndex: 0, // Assuming
-    ),
-    Question(
-      id: 3,
-      questionText:
-          '"কেউ বা ডরায়ে থাকে, কেউ বা ডরায়ে না" - এখানে কীসের প্রতি ইঙ্গিত করা হয়েছে?',
-      options: ['মৃত্যুভয়', 'সমাজভয়', 'ভবিষ্যৎ', 'ভাগ্য'],
-      correctOptionIndex: 3, // Assuming
-    ),
-    Question(
-      id: 4,
-      questionText: 'রবীন্দ্রনাথ ঠাকুর কত সালে নোবেল পুরস্কার পান?',
-      options: ['১৯১১', '১৯১৩', '১৯২১', '১৯৪১'],
-      correctOptionIndex: 1, // 1913
-    ),
-    Question(
-      id: 5,
-      questionText: '"বোঝাপড়া" কবিতার মূল ভাব কী?',
-      options: [
-        'বিদ্রোহ',
-        'আত্মসমর্পন',
-        'বাস্তবতা মেনে নেওয়া',
-        'প্রকৃতি প্রেম',
-      ],
-      correctOptionIndex: 2,
-    ),
-  ];
+  List<Question> _questions = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+  String _videoTitle = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPracticeTest();
+  }
+
+  Future<void> _loadPracticeTest() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await StudentService.getPracticeTest(widget.videoId);
+
+      if (result['success'] && mounted) {
+        final data = result['data'];
+
+        // Extract data from API response
+        final List<dynamic> questions = data['data']['questions'] ?? [];
+        final List<dynamic> options = data['data']['options'] ?? [];
+        _videoTitle = data['data']['video_title'] ?? widget.videoTitle;
+
+        // Build Question objects
+        List<Question> loadedQuestions = [];
+        for (int i = 0; i < questions.length; i++) {
+          if (i < options.length) {
+            // Parse options - they can be arrays or comma-separated strings
+            List<String> questionOptions = [];
+            if (options[i] is List) {
+              questionOptions = List<String>.from(options[i]);
+            } else if (options[i] is String) {
+              questionOptions =
+                  options[i]
+                      .toString()
+                      .split(',')
+                      .map((e) => e.trim())
+                      .toList();
+            }
+
+            loadedQuestions.add(
+              Question(
+                id: i + 1,
+                questionText: questions[i].toString(),
+                options: questionOptions,
+                correctOptionIndex: 0, // Will be revealed after submission
+              ),
+            );
+          }
+        }
+
+        setState(() {
+          _questions = loadedQuestions;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Failed to load practice test';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error loading practice test: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.darkNavy),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+              ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textGray,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _loadPracticeTest,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              : _buildTestContent(),
+    );
+  }
+
+  Widget _buildTestContent() {
+    if (_questions.isEmpty) {
+      return const Center(child: Text('No questions available for this test.'));
+    }
     // Calculate progress
     int answeredCount =
         _questions.where((q) => q.selectedOptionIndex != null).length;
@@ -95,9 +177,9 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                 children: [
                   RichText(
                     textAlign: TextAlign.center,
-                    text: const TextSpan(
+                    text: TextSpan(
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text: 'Practice Test: ',
                           style: TextStyle(
                             fontSize: 22,
@@ -107,31 +189,24 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                           ),
                         ),
                         TextSpan(
-                          text: 'বোঝাপড়া',
-                          style: TextStyle(
+                          text:
+                              _videoTitle.isNotEmpty
+                                  ? _videoTitle
+                                  : widget.videoTitle,
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: AppColors.darkNavy,
-                            // Use a Bengali supportive font if available, else default
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' - Class 8',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkNavy,
-                            fontFamily: 'Roboto',
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Test your knowledge about " বোঝাপড়া " with these fun questions!\nChoose the correct answers and see how well you understand the concepts.',
+                  Text(
+                    'Test your knowledge with these questions!\\nChoose the correct answers and see how well you understand the concepts.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textGray,
                       fontSize: 13,
                       height: 1.5,
@@ -299,14 +374,41 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
             CustomButton(
               text: 'Submit Test',
               onPressed: () {
-                // Check if all answered? Or allow partial submission?
-                // For now, allow partial but warn or just submit.
-                // Let's just navigate to results.
+                // Check if all questions are answered
+                int unansweredCount =
+                    _questions
+                        .where((q) => q.selectedOptionIndex == null)
+                        .length;
+
+                if (unansweredCount > 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Please answer all questions before submitting. ($unansweredCount unanswered)',
+                      ),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+
+                // Prepare answers for submission
+                Map<String, String> answers = {};
+                for (int i = 0; i < _questions.length; i++) {
+                  answers[i.toString()] =
+                      _questions[i].selectedOptionIndex.toString();
+                }
+
+                // Navigate to results screen which will submit to backend
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder:
-                        (context) => TestResultScreen(questions: _questions),
+                        (context) => TestResultScreen(
+                          questions: _questions,
+                          videoId: widget.videoId,
+                          studentAnswers: answers,
+                        ),
                   ),
                 );
               },
