@@ -212,7 +212,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
             pinned: true,
             backgroundColor: Colors.white,
             elevation: 0,
-            toolbarHeight: 65,
+            toolbarHeight: 90,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
               onPressed: () => Navigator.of(context).pop(),
@@ -232,7 +232,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 12,
+                    vertical: 8,
                   ),
                   child: Row(
                     children: [

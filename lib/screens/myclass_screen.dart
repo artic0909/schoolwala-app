@@ -226,7 +226,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
             pinned: true,
             backgroundColor: Colors.white,
             elevation: 0,
-            toolbarHeight: 65,
+            toolbarHeight: 90,
             flexibleSpace: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -242,7 +242,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 12,
+                    vertical: 8,
                   ),
                   child: Row(
                     children: [
