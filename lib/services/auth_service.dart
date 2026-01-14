@@ -19,6 +19,15 @@ class AuthService {
     } else {
       userNotifier.value = user;
     }
+
+    // Refresh profile in background if logged in
+    final token = await getToken();
+    if (token != null) {
+      getProfile().catchError((e) {
+        print('AuthService: Profile auto-refresh failed: $e');
+        return {'success': false, 'message': e.toString()};
+      });
+    }
   }
 
   // Get stored token

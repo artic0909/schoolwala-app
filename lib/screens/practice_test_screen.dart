@@ -6,6 +6,7 @@ import '../widgets/practice_test_option.dart';
 import '../widgets/custom_button.dart';
 import '../services/student_service.dart';
 import 'test_result_screen.dart';
+import '../widgets/global_bottom_bar.dart';
 
 class PracticeTestScreen extends StatefulWidget {
   final String videoId;
@@ -241,6 +242,7 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                 ),
               )
               : _buildTestContent(),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
     );
   }
 

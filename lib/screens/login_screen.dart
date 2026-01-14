@@ -88,8 +88,10 @@ class _LoginScreenState extends State<LoginScreen>
       });
 
       if (result['success']) {
-        // Extract name from email (before @)
-        // Ideally, name should come from API response
+        // Refresh profile from server to get full details (image, etc.)
+        AuthService.getProfile();
+
+        // Extract name from current data for immediate feedback
         String studentName = 'Student';
         if (result['data'] != null &&
             result['data']['data'] != null &&
