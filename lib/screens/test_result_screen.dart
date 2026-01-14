@@ -59,6 +59,33 @@ class _TestResultScreenState extends State<TestResultScreen> {
 
       if (result['success'] && mounted) {
         final data = result['data'];
+        final dynamic rawCorrectAnswers = data['data']['correct_answers'];
+
+        // Handle both Map and List for correct answers
+        Map<String, dynamic> correctAnswersMap = {};
+        if (rawCorrectAnswers is List) {
+          for (int i = 0; i < rawCorrectAnswers.length; i++) {
+            correctAnswersMap[i.toString()] = rawCorrectAnswers[i];
+          }
+        } else if (rawCorrectAnswers is Map) {
+          correctAnswersMap = Map<String, dynamic>.from(rawCorrectAnswers);
+        }
+
+        // Update questions with correct answers from backend
+        for (int i = 0; i < widget.questions.length; i++) {
+          final correctAnsText = correctAnswersMap[i.toString()];
+          if (correctAnsText != null) {
+            final String targetText =
+                correctAnsText.toString().trim().toLowerCase();
+            final correctIdx = widget.questions[i].options.indexWhere(
+              (opt) => opt.trim().toLowerCase() == targetText,
+            );
+            if (correctIdx != -1) {
+              widget.questions[i].correctOptionIndex = correctIdx;
+            }
+          }
+        }
+
         setState(() {
           _score = data['data']['score'] ?? 0;
           _totalQuestions =
@@ -84,19 +111,10 @@ class _TestResultScreenState extends State<TestResultScreen> {
   @override
   Widget build(BuildContext context) {
     // Calculate correct answers locally for display
-    int correctAnswers = 0;
-    for (var q in widget.questions) {
-      if (q.selectedOptionIndex == q.correctOptionIndex) {
-        correctAnswers++;
-      }
-    }
-    // Use backend score if available, otherwise calculate locally
-    int totalPoints =
-        _score > 0
-            ? _score
-            : (correctAnswers * 2); // Backend uses 2 points per question
+    int correctAnswers = _score ~/ 2;
     int totalQuestions =
         _totalQuestions > 0 ? _totalQuestions : widget.questions.length;
+    int totalPoints = _score;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -201,7 +219,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'You answered $correctAnswers out of $totalQuestions questions',
+                            'You answered $correctAnswers out of $totalQuestions correct',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,

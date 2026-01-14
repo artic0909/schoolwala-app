@@ -24,6 +24,8 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
   int _selectedRating = 0;
   final TextEditingController _feedbackController = TextEditingController();
   bool _isLiked = false;
+  int _currentLikes = 0;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -42,6 +44,25 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
           enableCaption: false,
         ),
       );
+    }
+    _currentLikes = widget.video.likes;
+    _loadVideoDetails();
+  }
+
+  Future<void> _loadVideoDetails() async {
+    try {
+      final result = await StudentService.getVideoDetails(widget.video.id);
+      if (result['success'] && mounted) {
+        setState(() {
+          _currentLikes = result['data']['video']['likes'] ?? 0;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading video details: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -87,7 +108,13 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
     final result = await StudentService.likeVideo(widget.video.id);
 
     if (result['success']) {
-      // Keep optimistic update or update with server count if returned
+      if (mounted &&
+          result['data'] != null &&
+          result['data']['likes'] != null) {
+        setState(() {
+          _currentLikes = result['data']['likes'];
+        });
+      }
     } else {
       // Revert if failed
       setState(() {
@@ -255,7 +282,7 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '${widget.video.likes + (_isLiked ? 1 : 0)} likes', // Optimistic count
+                                  '$_currentLikes likes',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight:
@@ -388,37 +415,41 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                       const SizedBox(height: 20),
 
                       // Submit Button
-                      GestureDetector(
-                        onTap: _handleSubmitFeedback,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: AppColors.orangeGradient,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryOrange.withOpacity(0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : GestureDetector(
+                            onTap: _handleSubmitFeedback,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: AppColors.orangeGradient,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryOrange.withOpacity(
+                                      0.3,
+                                    ),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: const Text(
-                            'Submit Feedback',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              child: const Text(
+                                'Submit Feedback',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
 
                       const SizedBox(height: 40),
                     ],

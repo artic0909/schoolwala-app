@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../models/question_model.dart';
@@ -45,33 +46,87 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
         final data = result['data'];
 
         // Extract data from API response
-        final List<dynamic> questions = data['data']['questions'] ?? [];
-        final List<dynamic> options = data['data']['options'] ?? [];
+        final List<dynamic> questionsList = data['data']['questions'] ?? [];
+        final List<dynamic> optionsList = data['data']['options'] ?? [];
+
+        final dynamic rawCorrectAnswers = data['data']['correct_answers'];
+        final dynamic rawSubmittedTest = data['data']['submitted_test'];
+
+        // Handle both Map and List for correct answers
+        Map<String, dynamic> correctAnswersMap = {};
+        if (rawCorrectAnswers is List) {
+          for (int i = 0; i < rawCorrectAnswers.length; i++) {
+            correctAnswersMap[i.toString()] = rawCorrectAnswers[i];
+          }
+        } else if (rawCorrectAnswers is Map) {
+          correctAnswersMap = Map<String, dynamic>.from(rawCorrectAnswers);
+        }
+
+        final Map<String, dynamic>? submittedTest =
+            rawSubmittedTest != null
+                ? Map<String, dynamic>.from(rawSubmittedTest)
+                : null;
+
+        final Map<String, dynamic>? studentAnswers =
+            (submittedTest != null && submittedTest['student_answers'] != null)
+                ? (submittedTest['student_answers'] is String
+                    ? Map<String, dynamic>.from(
+                      json.decode(submittedTest['student_answers']),
+                    )
+                    : Map<String, dynamic>.from(
+                      submittedTest['student_answers'],
+                    ))
+                : null;
+
         _videoTitle = data['data']['video_title'] ?? widget.videoTitle;
 
         // Build Question objects
         List<Question> loadedQuestions = [];
-        for (int i = 0; i < questions.length; i++) {
-          if (i < options.length) {
-            // Parse options - they can be arrays or comma-separated strings
+        for (int i = 0; i < questionsList.length; i++) {
+          if (i < optionsList.length) {
+            // Parse options
             List<String> questionOptions = [];
-            if (options[i] is List) {
-              questionOptions = List<String>.from(options[i]);
-            } else if (options[i] is String) {
+            if (optionsList[i] is List) {
+              questionOptions = List<String>.from(optionsList[i]);
+            } else if (optionsList[i] is String) {
               questionOptions =
-                  options[i]
+                  optionsList[i]
                       .toString()
                       .split(',')
                       .map((e) => e.trim())
                       .toList();
             }
 
+            int correctIdx = 0;
+            if (correctAnswersMap.containsKey(i.toString())) {
+              final correctText =
+                  correctAnswersMap[i.toString()]
+                      .toString()
+                      .trim()
+                      .toLowerCase();
+              correctIdx = questionOptions.indexWhere(
+                (opt) => opt.trim().toLowerCase() == correctText,
+              );
+              if (correctIdx == -1) correctIdx = 0;
+            }
+
+            int? selectedIdx;
+            if (studentAnswers != null &&
+                studentAnswers[i.toString()] != null) {
+              final selectedText =
+                  studentAnswers[i.toString()].toString().trim().toLowerCase();
+              selectedIdx = questionOptions.indexWhere(
+                (opt) => opt.trim().toLowerCase() == selectedText,
+              );
+            }
+
             loadedQuestions.add(
               Question(
                 id: i + 1,
-                questionText: questions[i].toString(),
+                questionText: questionsList[i].toString(),
                 options: questionOptions,
-                correctOptionIndex: 0, // Will be revealed after submission
+                correctOptionIndex: correctIdx,
+                selectedOptionIndex: selectedIdx,
               ),
             );
           }
@@ -81,6 +136,27 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
           _questions = loadedQuestions;
           _isLoading = false;
         });
+
+        // If already submitted, navigate to results directly
+        if (submittedTest != null && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => TestResultScreen(
+                      questions: _questions,
+                      videoId: widget.videoId,
+                      studentAnswers: Map<String, String>.from(
+                        studentAnswers ?? {},
+                      ),
+                      isViewOnly: true,
+                      score: submittedTest['score'],
+                    ),
+              ),
+            );
+          });
+        }
       } else {
         setState(() {
           _errorMessage = result['message'] ?? 'Failed to load practice test';

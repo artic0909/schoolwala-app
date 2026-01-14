@@ -142,14 +142,11 @@ class StudentService {
   }
 
   // Get Video Details
-  static Future<Map<String, dynamic>> getVideoDetails(
-    String chapterId,
-    String videoId,
-  ) async {
+  static Future<Map<String, dynamic>> getVideoDetails(String videoId) async {
     try {
       final headers = await AuthService.getAuthHeaders();
       final response = await http.get(
-        Uri.parse(ApiConstants.videoDetailsEndpoint(chapterId, videoId)),
+        Uri.parse(ApiConstants.videoDetailsEndpoint('', videoId)),
         headers: headers,
       );
       if (response.statusCode == 200) {
@@ -228,8 +225,6 @@ class StudentService {
   ) async {
     try {
       final headers = await AuthService.getAuthHeaders();
-      // Need to encode body as JSON because it's complex data usually
-      headers['Content-Type'] = 'application/json';
       final response = await http.post(
         Uri.parse(ApiConstants.submitTestEndpoint),
         body: json.encode(data),
