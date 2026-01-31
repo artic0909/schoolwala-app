@@ -397,21 +397,48 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: Image.asset(
-                          widget.subject.imagePath,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: widget.subject.colors,
+                        child:
+                            widget.subject.backgroundImageUrl != null
+                                ? Image.network(
+                                  widget.subject.backgroundImageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      widget.subject.imagePath,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: widget.subject.colors,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                )
+                                : Image.asset(
+                                  widget.subject.imagePath,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: widget.subject.colors,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
-                            );
-                          },
-                        ),
                       ),
                       Positioned.fill(
                         child: Container(
