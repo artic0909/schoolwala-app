@@ -108,6 +108,13 @@ class _MyClassScreenState extends State<MyClassScreen> {
               // Use modulo to cycle through local assets
               int assetIndex = index % fallbackImages.length;
 
+              // Handle background image
+              String? bgImage = item['background_image'];
+              String? backgroundImageUrl;
+              if (bgImage != null && bgImage.toString().isNotEmpty) {
+                backgroundImageUrl = 'https://schoolwala.info/storage/$bgImage';
+              }
+
               return SubjectData(
                 id: item['id']?.toString() ?? '',
                 name: item['name'] ?? '',
@@ -119,6 +126,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                 icon: fallbackIcons[assetIndex],
                 imagePath: fallbackImages[assetIndex], // Use local asset
                 colors: fallbackColors[assetIndex],
+                backgroundImageUrl: backgroundImageUrl,
               );
             }).toList();
 
@@ -660,6 +668,7 @@ class SubjectData {
   final IconData icon;
   final String imagePath;
   final List<Color> colors;
+  final String? backgroundImageUrl;
 
   SubjectData({
     required this.id,
@@ -669,6 +678,7 @@ class SubjectData {
     required this.icon,
     required this.imagePath,
     required this.colors,
+    this.backgroundImageUrl,
   });
 }
 
