@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../widgets/subject_card.dart';
 import '../screens/mychapters_screen.dart';
-import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
@@ -24,6 +23,20 @@ class _MyClassScreenState extends State<MyClassScreen> {
   String? _subjectsError;
   String _className = '';
   Map<String, dynamic>? _feeDetails;
+
+  String _getGreeting() {
+    final now = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+    final hour = now.hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else if (hour < 20) {
+      return 'Good Evening';
+    } else {
+      return 'Good Night';
+    }
+  }
 
   @override
   void initState() {
@@ -168,303 +181,355 @@ class _MyClassScreenState extends State<MyClassScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF5F7FA),
       drawer: AppDrawer(studentName: widget.studentName),
       body: CustomScrollView(
         slivers: [
-          // App Bar
-          SliverAppBar(
-            automaticallyImplyLeading: false,
-            floating: true,
-            pinned: true,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            toolbarHeight: 90,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+          SliverToBoxAdapter(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Top Header (Curved Background)
+                Container(
+                  height: 220,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryOrange,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
                   ),
-                ],
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      Builder(
-                        builder: (context) => IconButton(
-                          icon: const Icon(Icons.menu, color: AppColors.darkNavy),
-                          onPressed: () => Scaffold.of(context).openDrawer(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Logo with gradient background
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: AppColors.orangeGradient,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primaryOrange.withValues(alpha: 0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              'assets/images/logo_bg.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.school,
-                                  color: Colors.white,
-                                  size: 28,
-                                );
-                              },
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Builder(
+                            builder: (context) => IconButton(
+                              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                              onPressed: () => Scaffold.of(context).openDrawer(),
                             ),
                           ),
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      // Student name
-                      ValueListenableBuilder<Map<String, dynamic>?>(
-                        valueListenable: AuthService.userNotifier,
-                        builder: (context, userData, _) {
-                          final student = userData?['student'] ?? userData;
-                          final name =
-                              (student is Map)
-                                  ? (student['student_name'] ??
-                                      widget.studentName)
-                                  : widget.studentName;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.darkNavy,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Student',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textGray.withValues(alpha: 0.8),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      // Profile button
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => ProfileScreen(
-                                    studentName:
-                                        (AuthService
-                                                .userNotifier
-                                                .value?['student']?['student_name'] ??
-                                            widget.studentName),
+                          // Schoolwala Logo Text or Image
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'SCHOOLWALA',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                ),
+                                Text(
+                                  'Education For All | WBBSE & CBSE',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        child: ValueListenableBuilder<Map<String, dynamic>?>(
-                          valueListenable: AuthService.userNotifier,
-                          builder: (context, userData, _) {
-                            final profile = userData?['profile'] ?? userData;
-                            final profileImage =
-                                (profile is Map)
-                                    ? profile['profile_image']
-                                    : null;
-                            final profileImageUrl =
-                                profileImage != null
-                                    ? 'https://schoolwala.info/storage/$profileImage'
-                                    : null;
-
-                            return Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.primaryOrange,
-                                  width: 2,
-                                ),
-                                image: DecorationImage(
-                                  image:
-                                      profileImageUrl != null
-                                          ? NetworkImage(profileImageUrl)
-                                              as ImageProvider
-                                          : const AssetImage(
-                                            'assets/images/profile.jpg',
-                                          ),
-                                  fit: BoxFit.cover,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primaryOrange.withValues(alpha: 
-                                      0.3,
-                                    ),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+                            onPressed: () {},
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
 
-          // Content
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                const SizedBox(height: 30),
-
-   
-                // Class selector button
-                Center(
+                // Overlapping Profile Card
+                Positioned(
+                  top: 130,
+                  left: 20,
+                  right: 20,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 14,
-                    ),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: AppColors.orangeGradient,
-                      ),
-                      borderRadius: BorderRadius.circular(30),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryOrange.withValues(alpha: 0.3),
-                          blurRadius: 15,
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
                       ],
                     ),
-                    child: Text(
-                      _className.isNotEmpty ? _className : 'Class',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 50),
-
-                // Subjects section
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'Subjects We Cover',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkNavy,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Subjects grid
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final crossAxisCount =
-                          constraints.maxWidth > 900
-                              ? 3
-                              : constraints.maxWidth > 600
-                              ? 2
-                              : 1;
-
-                      if (_isLoadingSubjects) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (_subjectsError != null) {
-                        return Center(child: Text(_subjectsError!));
-                      }
-                      if (_subjects.isEmpty) {
-                        return const Center(
-                          child: Text('No subjects available'),
-                        );
-                      }
-
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1.1,
+                    child: Row(
+                      children: [
+                        // Profile Image
+                        ValueListenableBuilder<Map<String, dynamic>?>(
+                          valueListenable: AuthService.userNotifier,
+                          builder: (context, userData, _) {
+                            final profile = userData?['profile'] ?? userData;
+                            final profileImage = (profile is Map) ? profile['profile_image'] : null;
+                            final profileImageUrl = profileImage != null
+                                ? 'https://schoolwala.info/storage/$profileImage'
+                                : null;
+                            return Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey[200],
+                                image: DecorationImage(
+                                  image: profileImageUrl != null
+                                      ? NetworkImage(profileImageUrl) as ImageProvider
+                                      : const AssetImage('assets/images/profile.jpg'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        itemCount: _subjects.length,
-                        itemBuilder: (context, index) {
-                          return SubjectCard(
-                            subject: _subjects[index],
-                            onTap: () => _handleSubjectTap(_subjects[index]),
-                          );
-                        },
-                      );
-                    },
+                        const SizedBox(width: 16),
+                        // Greeting and School
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ValueListenableBuilder<Map<String, dynamic>?>(
+                                valueListenable: AuthService.userNotifier,
+                                builder: (context, userData, _) {
+                                  final student = userData?['student'] ?? userData;
+                                  final name = (student is Map)
+                                      ? (student['student_name'] ?? widget.studentName)
+                                      : widget.studentName;
+                                  final studentId = (student is Map)
+                                      ? (student['student_id'] ?? 'N/A')
+                                      : 'N/A';
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${_getGreeting()} 👋',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textGray.withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        name,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.darkNavy,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue.withValues(alpha: 0.1),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.class_, size: 12, color: Colors.blue),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              '${_className.isNotEmpty ? _className : 'Class'} | ID: $studentId',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.darkNavy,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 80),
-
-
               ],
             ),
           ),
+
+          // Spacer for overlapping card
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 50),
+          ),
+
+          // Quick Access Header
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Quick Access',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
+                  ),
+                  Text(
+                    'View All',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.withValues(alpha: 0.8)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Subjects Grid (Quick Access)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  if (_isLoadingSubjects) {
+                    return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()));
+                  }
+                  if (_subjectsError != null) {
+                    return Center(child: Text(_subjectsError!));
+                  }
+                  if (_subjects.isEmpty) {
+                    return const Center(child: Text('No subjects available'));
+                  }
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemCount: _subjects.length > 8 ? 8 : _subjects.length, // Limit to 8 items for quick access
+                    itemBuilder: (context, index) {
+                      return SubjectCard(
+                        subject: _subjects[index],
+                        onTap: () => _handleSubjectTap(_subjects[index]),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // Fee Due Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Fee Due',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
+                  ),
+                  Text(
+                    'View Details',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.withValues(alpha: 0.8)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.account_balance_wallet, color: AppColors.primaryOrange, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tuition Fee (May 2024)',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Due Date: 20 May 2024',
+                            style: TextStyle(fontSize: 12, color: Colors.red.withValues(alpha: 0.8), fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          '₹2,500',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryOrange,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Pay Now',
+                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 40),
+          ),
         ],
       ),
-      bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 0),
     );
   }
 }
