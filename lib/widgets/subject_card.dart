@@ -52,8 +52,6 @@ class SubjectCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: AppColors.darkNavy,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
             ),
