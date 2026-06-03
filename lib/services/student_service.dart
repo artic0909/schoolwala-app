@@ -300,6 +300,28 @@ class StudentService {
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
+  // Get Transactions
+  static Future<Map<String, dynamic>> getTransactions() async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
+      final response = await http.get(
+        Uri.parse(ApiConstants.paymentTransactionsEndpoint),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': json.decode(response.body)};
+      } else {
+        final error = json.decode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Failed to fetch transactions',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
 
   // Create Razorpay Order
   static Future<Map<String, dynamic>> createRazorpayOrder(

@@ -6,6 +6,9 @@ import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
 import '../widgets/app_drawer.dart';
+import '../screens/fees_screen.dart';
+import '../screens/payment_screen.dart';
+import 'package:intl/intl.dart';
 
 class MyClassScreen extends StatefulWidget {
   final String studentName;
@@ -22,7 +25,8 @@ class _MyClassScreenState extends State<MyClassScreen> {
   bool _isLoadingSubjects = true;
   String? _subjectsError;
   String _className = '';
-  Map<String, dynamic>? _feeDetails;
+  Map<String, dynamic>? _paymentInfo;
+  bool _isLoadingPayment = true;
 
   String _getGreeting() {
     final now = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
@@ -42,6 +46,21 @@ class _MyClassScreenState extends State<MyClassScreen> {
   void initState() {
     super.initState();
     _loadSubjects();
+    _loadPaymentInfo();
+  }
+
+  Future<void> _loadPaymentInfo() async {
+    final result = await StudentService.getPaymentInfo();
+    if (result['success'] && mounted) {
+      setState(() {
+        _paymentInfo = result['data']['data'];
+        _isLoadingPayment = false;
+      });
+    } else if (mounted) {
+      setState(() {
+        _isLoadingPayment = false;
+      });
+    }
   }
 
   Future<void> _loadSubjects() async {
@@ -50,14 +69,9 @@ class _MyClassScreenState extends State<MyClassScreen> {
       try {
         final data = result['data'];
         List<dynamic> list = [];
-        List<dynamic> fees = [];
-
         if (data is Map) {
           if (data.containsKey('name')) {
             _className = data['name']?.toString() ?? '';
-          }
-          if (data.containsKey('fees')) {
-            fees = data['fees'] ?? [];
           }
 
           if (data.containsKey('subjects')) {
@@ -69,19 +83,12 @@ class _MyClassScreenState extends State<MyClassScreen> {
             if (data['data'].containsKey('name')) {
               _className = data['data']['name']?.toString() ?? '';
             }
-            if (data['data'].containsKey('fees')) {
-              fees = data['data']['fees'] ?? [];
-            }
             list = data['data']['subjects'] ?? [];
           } else if (data.containsKey('data') && data['data'] is List) {
             list = data['data'];
           }
         } else if (data is List) {
           list = data;
-        }
-
-        if (fees.isNotEmpty) {
-          _feeDetails = fees[0];
         }
 
         // Predefined fallback assets for round-robin assignment
@@ -172,7 +179,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
             (context) => MyChaptersScreen(
               subject: subject,
               studentName: widget.studentName,
-              feeDetails: _feeDetails,
+              feeDetails: _paymentInfo?['fees'],
             ),
       ),
     );
@@ -249,12 +256,20 @@ class _MyClassScreenState extends State<MyClassScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Fee Due',
+                          'Current Fees',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
                         ),
-                        Text(
-                          'View Details',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.withValues(alpha: 0.8)),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => FeesScreen(studentName: widget.studentName)),
+                            );
+                          },
+                          child: Text(
+                            'View Details',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.withValues(alpha: 0.8)),
+                          ),
                         ),
                       ],
                     ),
@@ -262,70 +277,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
 
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.orange.withValues(alpha: 0.1)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.orange.withValues(alpha: 0.1),
-                                  blurRadius: 5,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.account_balance_wallet, color: AppColors.primaryOrange, size: 28),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Tuition Fee (May 2024)',
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Due Date: 20 May 2024',
-                                  style: TextStyle(fontSize: 12, color: Colors.red.withValues(alpha: 0.8), fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              const Text(
-                                '₹2,500',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryOrange,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text(
-                                  'Pay Now',
-                                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                    child: _buildCurrentFeesCard(),
                   ),
 
                   const SizedBox(height: 40),
@@ -528,6 +480,142 @@ class _MyClassScreenState extends State<MyClassScreen> {
         ],
       ),
       bottomNavigationBar: const GlobalBottomBar(currentIndex: 0),
+    );
+  }
+
+  Widget _buildCurrentFeesCard() {
+    if (_isLoadingPayment) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primaryOrange));
+    }
+    
+    if (_paymentInfo == null) {
+      return const SizedBox.shrink();
+    }
+
+    final hasSubscription = _paymentInfo!['has_active_subscription'] ?? false;
+    final feesData = _paymentInfo!['fees'];
+    final classData = _paymentInfo!['class'];
+    final currentSubscription = _paymentInfo!['current_subscription'];
+    
+    final className = classData['name'] ?? 'Class';
+    final amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
+
+    String subtitle = 'Pending Fees';
+    Color subtitleColor = Colors.red.withValues(alpha: 0.8);
+    
+    if (hasSubscription && currentSubscription != null) {
+      final expiryDateStr = currentSubscription['expiry_date'];
+      if (expiryDateStr != null) {
+        final expiry = DateTime.tryParse(expiryDateStr);
+        if (expiry != null) {
+          subtitle = 'Valid till: ${DateFormat('dd MMM yyyy').format(expiry)}';
+          subtitleColor = Colors.green;
+        }
+      } else {
+        subtitle = 'Active Plan';
+        subtitleColor = Colors.green;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.account_balance_wallet, color: AppColors.primaryOrange, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$className Plan',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: subtitleColor, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '₹${amount.toStringAsFixed(0)}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
+              ),
+              const SizedBox(height: 6),
+              if (!hasSubscription)
+                GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentScreen(
+                          classId: classData['id'].toString(),
+                          subjectId: '',
+                          feeId: feesData['id'].toString(),
+                          amount: amount.toString(),
+                          studentName: widget.studentName,
+                        ),
+                      ),
+                    );
+                    if (result == true) {
+                      _loadPaymentInfo();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryOrange,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Pay Now',
+                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Active',
+                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -99,4 +99,7 @@ class ApiConstants {
 
   /// Verify Razorpay Payment
   static const String paymentRazorpayVerifyEndpoint = '$baseUrl/student/payment/razorpay/verify';
+
+  /// Get Transaction History
+  static const String paymentTransactionsEndpoint = '$baseUrl/student/payment/transactions';
 }

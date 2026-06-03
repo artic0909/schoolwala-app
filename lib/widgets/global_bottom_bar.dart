@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../screens/profile_screen.dart';
 import '../screens/myclass_screen.dart';
+import '../screens/fees_screen.dart';
 import '../services/auth_service.dart';
-import '../utils/toast_helper.dart';
 
 class GlobalBottomBar extends StatelessWidget {
   final int currentIndex;
@@ -30,8 +30,11 @@ class GlobalBottomBar extends StatelessWidget {
           );
         }
         break;
-      case 2: // Fees (Placeholder)
-        ToastHelper.showInfo(context, 'Fees screen coming soon');
+      case 2: // Fees
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => FeesScreen(studentName: studentName)),
+        );
         break;
       case 3: // Profile
         Navigator.pushReplacement(
