@@ -5,8 +5,6 @@ import '../screens/mychapters_screen.dart';
 import '../screens/myclass_screen.dart';
 import '../screens/playvideo_screen.dart';
 import '../screens/practice_test_screen.dart';
-import '../screens/profile_screen.dart';
-import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
 import '../widgets/app_drawer.dart';
@@ -178,169 +176,185 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: CustomScrollView(
         slivers: [
-          // App Bar
+          // Sticky Subject Header and Stats Panel
           SliverAppBar(
-            floating: true,
             pinned: true,
-            backgroundColor: Colors.white,
+            expandedHeight: 310.0,
+            toolbarHeight: 0.0,
+            backgroundColor: const Color(0xFFF8F9FA),
+            automaticallyImplyLeading: false,
             elevation: 0,
-            toolbarHeight: 90,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: Container(color: const Color(0xFFF8F9FA)),
                   ),
-                ],
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 40),
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: AppColors.orangeGradient,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primaryOrange.withValues(alpha: 0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(40),
+                          bottomRight: Radius.circular(40),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              'assets/images/logo_bg.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.school,
-                                  color: Colors.white,
-                                  size: 28,
-                                );
-                              },
-                            ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.subject.colors[0].withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(40),
+                          bottomRight: Radius.circular(40),
                         ),
-                      ),
-                      const Spacer(),
-                      ValueListenableBuilder<Map<String, dynamic>?>(
-                        valueListenable: AuthService.userNotifier,
-                        builder: (context, userData, _) {
-                          final student = userData?['student'] ?? userData;
-                          final name =
-                              (student is Map)
-                                  ? (student['student_name'] ??
-                                      widget.studentName)
-                                  : widget.studentName;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.darkNavy,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Student',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textGray.withValues(alpha: 0.8),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => ProfileScreen(
-                                    studentName:
-                                        (AuthService
-                                                .userNotifier
-                                                .value?['student']?['student_name'] ??
-                                            widget.studentName),
-                                  ),
-                            ),
-                          );
-                        },
-                        child: ValueListenableBuilder<Map<String, dynamic>?>(
-                          valueListenable: AuthService.userNotifier,
-                          builder: (context, userData, _) {
-                            final profile = userData?['profile'] ?? userData;
-                            final profileImage =
-                                (profile is Map)
-                                    ? profile['profile_image']
-                                    : null;
-                            final profileImageUrl =
-                                profileImage != null
-                                    ? 'https://schoolwala.info/storage/$profileImage'
-                                    : null;
-
-                            return Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.primaryOrange,
-                                  width: 2,
-                                ),
-                                image: DecorationImage(
-                                  image:
-                                      profileImageUrl != null
-                                          ? NetworkImage(profileImageUrl)
-                                              as ImageProvider
-                                          : const AssetImage(
-                                            'assets/images/profile.jpg',
-                                          ),
-                                  fit: BoxFit.cover,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primaryOrange.withValues(alpha: 
-                                      0.3,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: widget.subject.backgroundImageUrl != null
+                                  ? Image.network(
+                                      widget.subject.backgroundImageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Image.asset(
+                                          widget.subject.imagePath,
+                                          fit: BoxFit.cover,
+                                        );
+                                      },
+                                    )
+                                  : Image.asset(
+                                      widget.subject.imagePath,
+                                      fit: BoxFit.cover,
                                     ),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                            ),
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.4),
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.8),
+                                    ],
+                                    stops: const [0.0, 0.3, 1.0],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                left: 24,
+                                right: 24,
+                                top: MediaQuery.of(context).padding.top + 20,
+                                bottom: 130,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                      ),
+                                    ),
+                                    child: widget.subject.backgroundImageUrl != null
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(16),
+                                            child: Image.network(
+                                              widget.subject.backgroundImageUrl!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) => Icon(
+                                                widget.subject.icon,
+                                                size: 32,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        : Icon(
+                                            widget.subject.icon,
+                                            size: 32,
+                                            color: Colors.white,
+                                          ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    _chapterName.isNotEmpty ? _chapterName : widget.chapter.title,
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      height: 1.2,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 10,
+                    left: 10,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(110.0),
+              child: Container(
+                height: 110,
+                padding: const EdgeInsets.symmetric(horizontal: 24).copyWith(bottom: 20),
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStatCard(
+                        _isLoadingVideos ? '-' : '${_videos.length}',
+                        'Video Lessons',
+                        Icons.play_circle_filled_rounded,
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.grey.shade200,
+                      ),
+                      _buildStatCard(
+                        _isLoadingVideos
+                            ? '-'
+                            : '${_videos.where((v) => v.hasPracticeTest).length}',
+                        'Practice Activities',
+                        Icons.local_activity_rounded,
                       ),
                     ],
                   ),
@@ -353,146 +367,32 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
           SliverToBoxAdapter(
             child: Column(
               children: [
-                // Chapter Header Section
-                Container(
-                  width: double.infinity,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child:
-                            widget.subject.backgroundImageUrl != null
-                                ? Image.network(
-                                  widget.subject.backgroundImageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Image.asset(
-                                      widget.subject.imagePath,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: widget.subject.colors,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                )
-                                : Image.asset(
-                                  widget.subject.imagePath,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: widget.subject.colors,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                      ),
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.3),
-                                Colors.black.withValues(alpha: 0.6),
-                              ],
+                if (_isFirstChapter)
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryOrange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primaryOrange.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, color: AppColors.primaryOrange, size: 20),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'This is a FREE preview chapter. Subscribe to unlock all chapters!',
+                            style: TextStyle(
+                              color: AppColors.darkNavy,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                widget.subject.icon,
-                                size: 28,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              _chapterName.isNotEmpty
-                                  ? _chapterName
-                                  : widget.chapter.title,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                height: 1.2,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _isFirstChapter
-                                  ? 'This is a FREE preview chapter. Subscribe to unlock all chapters!'
-                                  : 'Explore comprehensive video lessons and practice activities.',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.white,
-                                height: 1.3,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const Spacer(),
-                            Row(
-                              children: [
-                                _buildStatCard(
-                                  _isLoadingVideos ? '-' : '${_videos.length}',
-                                  'Video Lessons',
-                                ),
-                                const SizedBox(width: 12),
-                                _buildStatCard(
-                                  _isLoadingVideos
-                                      ? '-'
-                                      : '${_videos.where((v) => v.hasPracticeTest).length}',
-                                  'Practice Activities',
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
                 // Video Lessons Section
                 Container(
@@ -567,38 +467,34 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
     );
   }
 
-  Widget _buildStatCard(String value, String label) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
+  Widget _buildStatCard(String value, String label, IconData icon) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          color: widget.subject.colors[0],
+          size: 20,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.white,
-                height: 1.2,
-              ),
-            ),
-          ],
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkNavy,
+          ),
         ),
-      ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.textGray,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 
