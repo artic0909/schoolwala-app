@@ -466,11 +466,24 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                 color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: Icon(
-                                widget.subject.icon,
-                                size: 32,
-                                color: Colors.white,
-                              ),
+                              child: widget.subject.backgroundImageUrl != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Image.network(
+                                        widget.subject.backgroundImageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => Icon(
+                                          widget.subject.icon,
+                                          size: 32,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : Icon(
+                                      widget.subject.icon,
+                                      size: 32,
+                                      color: Colors.white,
+                                    ),
                             ),
                             const Spacer(),
                             Text(
