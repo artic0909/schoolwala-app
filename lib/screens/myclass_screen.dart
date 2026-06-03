@@ -183,197 +183,12 @@ class _MyClassScreenState extends State<MyClassScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       drawer: AppDrawer(studentName: widget.studentName),
-      body: Column(
+      body: Stack(
         children: [
-          // --- FIXED HEADER ---
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Top Header (Curved Background)
-              Container(
-                height: 230,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryOrange,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Builder(
-                          builder: (context) => IconButton(
-                            icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-                            onPressed: () => Scaffold.of(context).openDrawer(),
-                          ),
-                        ),
-                        // Schoolwala Logo Text or Image
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Column(
-                            children: [
-                              const Text(
-                                'SCHOOLWALA',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Education For All | WBBSE & CBSE',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.notifications_none, color: Colors.white, size: 28),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Overlapping Profile Card
-              Positioned(
-                top: 130,
-                left: 20,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // Profile Image
-                      ValueListenableBuilder<Map<String, dynamic>?>(
-                        valueListenable: AuthService.userNotifier,
-                        builder: (context, userData, _) {
-                          final profile = userData?['profile'] ?? userData;
-                          final profileImage = (profile is Map) ? profile['profile_image'] : null;
-                          final profileImageUrl = profileImage != null
-                              ? 'https://schoolwala.info/storage/$profileImage'
-                              : null;
-                          return Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.grey[200],
-                              image: DecorationImage(
-                                image: profileImageUrl != null
-                                    ? NetworkImage(profileImageUrl) as ImageProvider
-                                    : const AssetImage('assets/images/profile.jpg'),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      // Greeting and School
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ValueListenableBuilder<Map<String, dynamic>?>(
-                              valueListenable: AuthService.userNotifier,
-                              builder: (context, userData, _) {
-                                final student = userData?['student'] ?? userData;
-                                final name = (student is Map)
-                                    ? (student['student_name'] ?? widget.studentName)
-                                    : widget.studentName;
-                                final studentId = (student is Map)
-                                    ? (student['student_id'] ?? 'N/A')
-                                    : 'N/A';
-
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${_getGreeting()} 👋',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textGray.withValues(alpha: 0.8),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.darkNavy,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue.withValues(alpha: 0.1),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(Icons.class_, size: 12, color: Colors.blue),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            '${_className.isNotEmpty ? _className : 'Class'} | ID: $studentId',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.darkNavy,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 50), // Spacer for the overlapping card
-
           // --- SCROLLABLE CONTENT ---
-          Expanded(
+          Positioned.fill(
             child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 240), // Starts just below the header
               child: Column(
                 children: [
                   // Quick Access Header
@@ -518,6 +333,198 @@ class _MyClassScreenState extends State<MyClassScreen> {
               ),
             ),
           ),
+          // --- FIXED HEADER ---
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Top Header (Curved Background)
+                Container(
+                  height: 230,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryOrange,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Builder(
+                            builder: (context) => IconButton(
+                              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                              onPressed: () => Scaffold.of(context).openDrawer(),
+                            ),
+                          ),
+                          // Schoolwala Logo Text or Image
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'SCHOOLWALA',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Education For All | WBBSE & CBSE',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Overlapping Profile Card
+                Positioned(
+                  top: 130,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Profile Image
+                        ValueListenableBuilder<Map<String, dynamic>?>(
+                          valueListenable: AuthService.userNotifier,
+                          builder: (context, userData, _) {
+                            final profile = userData?['profile'] ?? userData;
+                            final profileImage = (profile is Map) ? profile['profile_image'] : null;
+                            final profileImageUrl = profileImage != null
+                                ? 'https://schoolwala.info/storage/$profileImage'
+                                : null;
+                            return Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey[200],
+                                border: Border.all(color: AppColors.primaryOrange.withValues(alpha: 0.5), width: 2),
+                                image: DecorationImage(
+                                  image: profileImageUrl != null
+                                      ? NetworkImage(profileImageUrl) as ImageProvider
+                                      : const AssetImage('assets/images/profile.jpg'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        // Greeting and School
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ValueListenableBuilder<Map<String, dynamic>?>(
+                                valueListenable: AuthService.userNotifier,
+                                builder: (context, userData, _) {
+                                  final student = userData?['student'] ?? userData;
+                                  final name = (student is Map)
+                                      ? (student['student_name'] ?? widget.studentName)
+                                      : widget.studentName;
+                                  final studentId = (student is Map)
+                                      ? (student['student_id'] ?? 'N/A')
+                                      : 'N/A';
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${_getGreeting()} 👋',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textGray.withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        name,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.darkNavy,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue.withValues(alpha: 0.1),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.class_, size: 12, color: Colors.blue),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              '${_className.isNotEmpty ? _className : 'Class'} | ID: $studentId',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.darkNavy,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         ],
       ),
       bottomNavigationBar: const GlobalBottomBar(currentIndex: 0),
