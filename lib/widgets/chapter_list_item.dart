@@ -16,150 +16,132 @@ class ChapterListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: chapter.isLocked
+                ? Colors.red.withValues(alpha: 0.15)
+                : color.withValues(alpha: 0.15),
+            width: 1.5,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row with SL number and Lock Icon
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // SL label with number
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: AppColors.orangeGradient,
-                  ),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Chapter ${chapter.number}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-
-              if (chapter.isLocked)
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.lock, size: 16, color: Colors.red),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Chapter title
-          Text(
-            chapter.title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.darkNavy,
-              height: 1.3,
+          boxShadow: [
+            BoxShadow(
+              color: (chapter.isLocked ? Colors.red : color).withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-
-          const SizedBox(height: 8),
-
-          // Video count
-          Row(
-            children: [
-              const Icon(
-                Icons.play_circle_outline,
-                size: 16,
-                color: Color(0xFF3B9EFF),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${chapter.videoCount} video${chapter.videoCount > 1 ? 's' : ''}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF3B9EFF),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Show Videos / Unlock button
-          GestureDetector(
-            onTap: onTap,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 10),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Chapter Number Badge
+            Container(
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors:
-                      chapter.isLocked
-                          ? [const Color(0xFFFF5252), const Color(0xFFD32F2F)]
-                          : AppColors.orangeGradient,
+                  colors: chapter.isLocked
+                      ? [
+                          Colors.red.withValues(alpha: 0.2),
+                          Colors.red.withValues(alpha: 0.05)
+                        ]
+                      : [
+                          color.withValues(alpha: 0.2),
+                          color.withValues(alpha: 0.05)
+                        ],
                 ),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: (chapter.isLocked
-                            ? Colors.red
-                            : AppColors.primaryOrange)
-                        .withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (chapter.isLocked) ...[
-                    const Icon(Icons.lock_open, color: Colors.white, size: 16),
-                    const SizedBox(width: 8),
-                  ],
                   Text(
-                    chapter.isLocked ? 'Unlock Now' : 'Show Videos',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    'CH',
+                    style: TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: chapter.isLocked ? Colors.red : color,
+                    ),
+                  ),
+                  Text(
+                    '${chapter.number}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: chapter.isLocked ? Colors.red : color,
+                      height: 1.1,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            
+            // Middle Content (Title and Videos)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    chapter.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkNavy,
+                      height: 1.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.play_circle_fill,
+                        size: 14,
+                        color: AppColors.textGray.withValues(alpha: 0.6),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${chapter.videoCount} video${chapter.videoCount != 1 ? 's' : ''}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textGray.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // Right Action Button
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: chapter.isLocked
+                    ? Colors.red.withValues(alpha: 0.1)
+                    : color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                chapter.isLocked ? Icons.lock_rounded : Icons.arrow_forward_ios_rounded,
+                size: chapter.isLocked ? 20 : 16,
+                color: chapter.isLocked ? Colors.red : color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

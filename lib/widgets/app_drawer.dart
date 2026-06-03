@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../screens/profile_screen.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/myclass_screen.dart';
+import '../screens/login_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final String studentName;
@@ -202,6 +203,28 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
                 _buildDrawerItem(
+                  icon: Icons.receipt_long_rounded,
+                  title: 'Transactions',
+                  isSelected: widget.currentRoute == 'Transactions',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Transactions coming soon')),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  icon: Icons.payment_rounded,
+                  title: 'Fees',
+                  isSelected: widget.currentRoute == 'Fees',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Fees coming soon')),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
                   icon: Icons.privacy_tip_rounded,
                   title: 'Privacy Policy',
                   onTap: () async {
@@ -222,6 +245,24 @@ class _AppDrawerState extends State<AppDrawer> {
                       await launchUrl(url);
                     }
                   },
+                ),
+                const Divider(height: 16, color: Colors.transparent),
+                _buildDrawerItem(
+                  icon: Icons.logout_rounded,
+                  title: 'Logout',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await AuthService.logout();
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  textColor: Colors.red,
+                  iconColor: Colors.red,
                 ),
               ],
             ),
@@ -261,6 +302,8 @@ class _AppDrawerState extends State<AppDrawer> {
     required String title,
     required VoidCallback onTap,
     bool isSelected = false,
+    Color? textColor,
+    Color? iconColor,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
@@ -273,14 +316,14 @@ class _AppDrawerState extends State<AppDrawer> {
             color: isSelected ? AppColors.primaryOrange : AppColors.primaryOrange.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: isSelected ? Colors.white : AppColors.primaryOrange),
+          child: Icon(icon, color: iconColor ?? (isSelected ? Colors.white : AppColors.primaryOrange)),
         ),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            color: isSelected ? AppColors.primaryOrange : AppColors.darkNavy,
+            color: textColor ?? (isSelected ? AppColors.primaryOrange : AppColors.darkNavy),
           ),
         ),
         onTap: onTap,

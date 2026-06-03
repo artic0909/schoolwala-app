@@ -300,4 +300,44 @@ class StudentService {
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
+
+  // Create Razorpay Order
+  static Future<Map<String, dynamic>> createRazorpayOrder(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConstants.paymentRazorpayOrderEndpoint),
+        body: json.encode(data),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': json.decode(response.body)};
+      }
+      return {'success': false, 'message': 'Failed to create order'};
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
+  // Verify Razorpay Payment
+  static Future<Map<String, dynamic>> verifyRazorpayPayment(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConstants.paymentRazorpayVerifyEndpoint),
+        body: json.encode(data),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': json.decode(response.body)};
+      }
+      return {'success': false, 'message': 'Failed to verify payment'};
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
 }

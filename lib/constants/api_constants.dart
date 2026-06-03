@@ -93,4 +93,10 @@ class ApiConstants {
   
   /// Submit payment receipt (POST with multipart form data)
   static const String paymentStoreEndpoint = '$baseUrl/student/payment/store';
+
+  /// Create Razorpay Order
+  static const String paymentRazorpayOrderEndpoint = '$baseUrl/student/payment/razorpay/order';
+
+  /// Verify Razorpay Payment
+  static const String paymentRazorpayVerifyEndpoint = '$baseUrl/student/payment/razorpay/verify';
 }

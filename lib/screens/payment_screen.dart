@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../constants/app_constants.dart';
 import '../services/student_service.dart';
 import '../services/auth_service.dart';
@@ -13,7 +12,7 @@ class PaymentScreen extends StatefulWidget {
   final String amount;
   final String subjectId;
   final String classId;
-  final String? qrCodeUrl;
+  final String? qrCodeUrl; // Kept for backward compatibility but won't be displayed
 
   const PaymentScreen({
     super.key,
@@ -37,154 +36,43 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final _phoneController = TextEditingController();
   final _classController = TextEditingController();
   final _amountController = TextEditingController();
+  
   String? _amount;
-  String? _qrCodeUrl;
   String? _feeId;
 
-  File? _imageFile;
-  final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
   bool _isLoadingFees = false;
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(source: source);
-      if (pickedFile != null) {
-        setState(() {
-          _imageFile = File(pickedFile.path);
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking image: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to pick image')));
-      }
-    }
-  }
-
-  void _showImageSourceOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder:
-          (context) => Container(
-            padding: const EdgeInsets.all(20),
-            height: 160,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Upload Screenshot',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.darkNavy,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.pop(context);
-                          _pickImage(ImageSource.camera);
-                        },
-                        child: const Column(
-                          children: [
-                            Icon(
-                              Icons.camera_alt,
-                              size: 30,
-                              color: AppColors.primaryOrange,
-                            ),
-                            SizedBox(height: 8),
-                            Text('Camera'),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.pop(context);
-                          _pickImage(ImageSource.gallery);
-                        },
-                        child: const Column(
-                          children: [
-                            Icon(
-                              Icons.photo_library,
-                              size: 30,
-                              color: AppColors.primaryOrange,
-                            ),
-                            SizedBox(height: 8),
-                            Text('Gallery'),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Future<void> _submitPayment() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_imageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload payment screenshot')),
-      );
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-
-    final fields = {
-      'student_name': _studentNameController.text,
-      'email': _emailController.text,
-      'phone': _phoneController.text,
-      'class_id': widget.classId,
-      'fees_id': _feeId ?? widget.feeId, // Use fetched ID
-      'subject_id': widget.subjectId,
-    };
-
-    final result = await StudentService.storePayment(fields, _imageFile!);
-
-    if (!context.mounted) return;
-    setState(() => _isSubmitting = false);
-    if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payment details submitted successfully!'),
-          ),
-        );
-        Future.delayed(const Duration(seconds: 1), () {
-          if (context.mounted) {
-            Navigator.pop(context);
-          }
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Submission failed')),
-        );
-      }
-  }
+  
+  late Razorpay _razorpay;
 
   @override
   void initState() {
     super.initState();
     _amount = widget.amount;
-    _qrCodeUrl = widget.qrCodeUrl;
     _feeId = widget.feeId;
 
     _studentNameController.text = widget.studentName;
     _classController.text = widget.className;
     _amountController.text = widget.amount;
+    
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
     _loadUserData();
     _fetchFeesInfo();
+  }
+
+  @override
+  void dispose() {
+    _studentNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _classController.dispose();
+    _amountController.dispose();
+    _razorpay.clear();
+    super.dispose();
   }
 
   Future<void> _fetchFeesInfo() async {
@@ -194,11 +82,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       if (result['success'] && result['data'] != null) {
         final data = result['data'];
 
-        // Update Class Name
         final classInfo = data['class'];
         if (classInfo != null && mounted) {
           setState(() {
-            // Check for 'name' (used in ProfileScreen) or 'class_name'
             String className =
                 classInfo['name'] ??
                 classInfo['class_name'] ??
@@ -213,10 +99,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             _amount = fees['amount']?.toString();
             _amountController.text = _amount ?? '';
             _feeId = fees['id']?.toString();
-
-            // USE BACKEND GENERATED FULL URL
-            _qrCodeUrl = fees['qrimage_url'];
-            debugPrint('QR Code URL from backend: $_qrCodeUrl');
           });
         }
       }
@@ -232,29 +114,132 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Future<void> _loadUserData() async {
     try {
       final user = await AuthService.getCurrentUser();
-      if (user != null) {
-        if (mounted) {
-          setState(() {
-            _emailController.text = user['email'] ?? '';
-            _phoneController.text = user['phone'] ?? user['mobile'] ?? '';
-            _studentNameController.text =
-                user['student_name'] ?? widget.studentName;
-          });
-        }
+      if (user != null && mounted) {
+        setState(() {
+          _emailController.text = user['email'] ?? '';
+          _phoneController.text = user['phone'] ?? user['mobile'] ?? '';
+          _studentNameController.text =
+              user['student_name'] ?? widget.studentName;
+        });
       }
     } catch (e) {
       debugPrint('Error loading user data: $e');
     }
   }
 
-  @override
-  void dispose() {
-    _studentNameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _classController.dispose();
-    _amountController.dispose();
-    super.dispose();
+  Future<void> _startRazorpayPayment() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _isSubmitting = true);
+
+    try {
+      // 1. Create Order on Backend
+      final orderResult = await StudentService.createRazorpayOrder({
+        'class_id': widget.classId,
+        'fees_id': _feeId ?? widget.feeId,
+      });
+
+      if (!orderResult['success']) {
+        if (!mounted) return;
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(orderResult['message'] ?? 'Failed to create order')),
+        );
+        return;
+      }
+
+      final orderData = orderResult['data'];
+      final String orderId = orderData['order_id'];
+      final String key = orderData['key'];
+      final num amountInRupees = orderData['amount'] ?? 0;
+      final int amountInPaise = (amountInRupees * 100).toInt();
+
+      // 2. Setup Razorpay Options
+      var options = {
+        'key': key,
+        'amount': amountInPaise,
+        'name': 'Schoolwala',
+        'order_id': orderId,
+        'description': 'Subscription for ${_classController.text}',
+        'prefill': {
+          'contact': _phoneController.text,
+          'email': _emailController.text,
+          'name': _studentNameController.text
+        },
+        'theme': {
+          'color': '#4f46e5'
+        }
+      };
+
+      // 3. Open Razorpay Checkout
+      // The state will be reset when the callback handlers run
+      _razorpay.open(options);
+
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error initiating payment: $e')),
+        );
+      }
+    }
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    try {
+      // Verify payment with backend
+      final verifyResult = await StudentService.verifyRazorpayPayment({
+        'razorpay_order_id': response.orderId,
+        'razorpay_payment_id': response.paymentId,
+        'razorpay_signature': response.signature,
+        'class_id': widget.classId,
+        'fees_id': _feeId ?? widget.feeId,
+        'subject_id': widget.subjectId,
+      });
+
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        
+        if (verifyResult['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Payment successful! Your subscription is active.')),
+          );
+          
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) Navigator.pop(context);
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(verifyResult['message'] ?? 'Payment verification failed.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error verifying payment: $e')),
+        );
+      }
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment Failed: ${response.message ?? "Unknown error"}')),
+      );
+    }
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('External Wallet selected: ${response.walletName}')),
+      );
+    }
   }
 
   @override
@@ -273,10 +258,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: AppColors.orangeGradient,
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(0),
-                  bottomRight: Radius.circular(0),
                 ),
               ),
               child: Column(
@@ -305,7 +286,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Complete your subscription payment easily',
+                    'Complete your subscription payment securely',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -356,7 +337,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             ),
                             const SizedBox(width: 8),
                             const Text(
-                              'Subscription Details',
+                              'Order Summary',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -371,142 +352,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         const Divider(color: Colors.white24, height: 24),
                         _buildDetailRow('Student:', _studentNameController.text),
                         const Divider(color: Colors.white24, height: 24),
-                        _buildDetailRow('Amount:', _amount ?? widget.amount),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Scan to Pay Card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(
-                        0xFFE8E8FF,
-                      ), // Using LightLavender from constants
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(
-                              Icons.qr_code_scanner,
-                              color: AppColors.darkNavy,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Scan to Pay',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkNavy,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child:
-                              _qrCodeUrl != null && _qrCodeUrl!.isNotEmpty
-                                  ? Image.network(
-                                    _qrCodeUrl!,
-                                    width: 180,
-                                    height: 180,
-                                    fit: BoxFit.contain,
-                                    loadingBuilder: (
-                                      context,
-                                      child,
-                                      loadingProgress,
-                                    ) {
-                                      if (loadingProgress == null) return child;
-                                      return Center(
-                                        child: CircularProgressIndicator(
-                                          value:
-                                              loadingProgress
-                                                          .expectedTotalBytes !=
-                                                      null
-                                                  ? loadingProgress
-                                                          .cumulativeBytesLoaded /
-                                                      loadingProgress
-                                                          .expectedTotalBytes!
-                                                  : null,
-                                        ),
-                                      );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      debugPrint(
-                                        'Error loading QR from URL: $_qrCodeUrl',
-                                      );
-                                      debugPrint('Error: $error');
-                                      return Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.error_outline,
-                                            size: 48,
-                                            color: Colors.red,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Failed to load QR code',
-                                            style: TextStyle(
-                                              color: Colors.red,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'URL: $_qrCodeUrl',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 10,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  )
-                                  : _buildQrPlaceholder(),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _amount ?? widget.amount,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2E7D32), // Green color for money
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Scan this QR code with any UPI app to make payment',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textGray.withValues(alpha: 0.8),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
+                        _buildDetailRow('Amount:', '₹${_amount ?? widget.amount}'),
                       ],
                     ),
                   ),
@@ -533,7 +379,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Payment Details',
+                            'Billing Details',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -543,7 +389,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Please fill in your details after making the payment',
+                            'Verify your details before proceeding to payment',
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textGray,
@@ -570,117 +416,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             isRequired: true,
                             keyboardType: TextInputType.phone,
                           ),
-                          const SizedBox(height: 16),
-                          _buildInputField(
-                            'Class Name',
-                            _classController,
-                            readOnly: true,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildInputField(
-                            'Amount Paid',
-                            _amountController,
-                            readOnly: true,
-                            textColor: const Color(0xFF2E7D32),
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Upload Screenshot
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              RichText(
-                                text: const TextSpan(
-                                  text: 'Upload Payment Screenshot/Receipt',
-                                  style: AppTextStyles.inputLabel,
-                                  children: [
-                                    TextSpan(
-                                      text: ' *',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: _showImageSourceOptions,
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 180,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: AppColors.inputBorder,
-                                      style: BorderStyle.solid,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.white,
-                                  ),
-                                  child:
-                                      _imageFile != null
-                                          ? Stack(
-                                            fit: StackFit.expand,
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(11),
-                                                child: Image.file(
-                                                  _imageFile!,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                              Center(
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(
-                                                    8,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black
-                                                        .withValues(alpha: 0.5),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.edit,
-                                                    color: Colors.white,
-                                                    size: 24,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                          : Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.cloud_upload_outlined,
-                                                color: AppColors.textGray,
-                                                size: 32,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'Click to upload screenshot of payment',
-                                                style: TextStyle(
-                                                  color: AppColors.textGray,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Accepted formats: JPG, PNG, GIF (Max: 2MB)',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.textGray.withValues(alpha: 0.6),
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
-                          ),
-
+                          
                           const SizedBox(height: 32),
 
                           // Submit Button
@@ -688,30 +424,54 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: _isSubmitting ? null : _submitPayment,
+                              onPressed: _isSubmitting || _isLoadingFees ? null : _startRazorpayPayment,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryOrange,
+                                backgroundColor: const Color(0xFF4f46e5), // Razorpay brand color matches web theme
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 elevation: 4,
-                                shadowColor: AppColors.primaryOrange
-                                    .withValues(alpha: 0.4),
+                                shadowColor: const Color(0xFF4f46e5).withValues(alpha: 0.4),
                               ),
-                              child:
-                                  _isSubmitting
-                                      ? const CircularProgressIndicator(
-                                        color: Colors.white,
-                                      )
-                                      : const Text(
-                                        'Submit Payment Details',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontFamily: 'Poppins',
+                              child: _isSubmitting
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.security, color: Colors.white, size: 18),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Pay ₹${_amount ?? widget.amount} Securely',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            fontFamily: 'Poppins',
+                                          ),
                                         ),
-                                      ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.lock_outline, size: 14, color: AppColors.textGray),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Payments are 100% secure and encrypted',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textGray,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -723,17 +483,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildQrPlaceholder() {
-    return Container(
-      width: 180,
-      height: 180,
-      color: Colors.grey[200],
-      child: const Center(
-        child: Icon(Icons.qr_code, size: 64, color: Colors.grey),
       ),
     );
   }
@@ -779,15 +528,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
           text: TextSpan(
             text: label,
             style: AppTextStyles.inputLabel,
-            children:
-                isRequired
-                    ? [
-                      const TextSpan(
-                        text: ' *',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ]
-                    : [],
+            children: isRequired
+                ? [
+                    const TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ]
+                : [],
           ),
         ),
         const SizedBox(height: 8),
@@ -822,15 +570,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ),
           ),
-          validator:
-              isRequired
-                  ? (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'This field is required';
-                    }
-                    return null;
+          validator: isRequired
+              ? (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'This field is required';
                   }
-                  : null,
+                  return null;
+                }
+              : null,
         ),
       ],
     );
