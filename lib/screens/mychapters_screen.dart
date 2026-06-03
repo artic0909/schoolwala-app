@@ -3,9 +3,7 @@ import '../constants/app_constants.dart';
 import '../widgets/chapter_list_item.dart';
 import '../screens/myclass_screen.dart';
 import '../screens/myvideos_screen.dart';
-import '../screens/profile_screen.dart';
 import '../screens/payment_screen.dart';
-import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
 import '../widgets/app_drawer.dart';
@@ -207,169 +205,209 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: CustomScrollView(
         slivers: [
-          // App Bar
+          // Sticky Subject Header and Stats Panel
           SliverAppBar(
-            floating: true,
             pinned: true,
-            backgroundColor: Colors.white,
+            expandedHeight: 250.0, // Image height minus overlap
+            toolbarHeight: 0.0,
+            backgroundColor: const Color(0xFFF8F9FA), // Covers notch when pinned
+            automaticallyImplyLeading: false,
             elevation: 0,
-            toolbarHeight: 90,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Solid background for the whole expanded area
+                  Positioned.fill(
+                    child: Container(color: const Color(0xFFF8F9FA)),
                   ),
-                ],
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 40),
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: AppColors.orangeGradient,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primaryOrange.withValues(alpha: 0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                  // The Curved Image
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 320, // Extends down to overlap with stats panel
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(40),
+                          bottomRight: Radius.circular(40),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              'assets/images/logo_bg.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.school,
-                                  color: Colors.white,
-                                  size: 28,
-                                );
-                              },
-                            ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.subject.colors[0].withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(40),
+                          bottomRight: Radius.circular(40),
                         ),
-                      ),
-                      const Spacer(),
-                      ValueListenableBuilder<Map<String, dynamic>?>(
-                        valueListenable: AuthService.userNotifier,
-                        builder: (context, userData, _) {
-                          final student = userData?['student'] ?? userData;
-                          final name =
-                              (student is Map)
-                                  ? (student['student_name'] ??
-                                      widget.studentName)
-                                  : widget.studentName;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.darkNavy,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Student',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textGray.withValues(alpha: 0.8),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => ProfileScreen(
-                                    studentName:
-                                        (AuthService
-                                                .userNotifier
-                                                .value?['student']?['student_name'] ??
-                                            widget.studentName),
-                                  ),
-                            ),
-                          );
-                        },
-                        child: ValueListenableBuilder<Map<String, dynamic>?>(
-                          valueListenable: AuthService.userNotifier,
-                          builder: (context, userData, _) {
-                            final profile = userData?['profile'] ?? userData;
-                            final profileImage =
-                                (profile is Map)
-                                    ? profile['profile_image']
-                                    : null;
-                            final profileImageUrl =
-                                profileImage != null
-                                    ? 'https://schoolwala.info/storage/$profileImage'
-                                    : null;
-
-                            return Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.primaryOrange,
-                                  width: 2,
-                                ),
-                                image: DecorationImage(
-                                  image:
-                                      profileImageUrl != null
-                                          ? NetworkImage(profileImageUrl)
-                                              as ImageProvider
-                                          : const AssetImage(
-                                            'assets/images/profile.jpg',
-                                          ),
-                                  fit: BoxFit.cover,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primaryOrange.withValues(alpha: 
-                                      0.3,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: widget.subject.backgroundImageUrl != null
+                                  ? Image.network(
+                                      widget.subject.backgroundImageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Image.asset(
+                                          widget.subject.imagePath,
+                                          fit: BoxFit.cover,
+                                        );
+                                      },
+                                    )
+                                  : Image.asset(
+                                      widget.subject.imagePath,
+                                      fit: BoxFit.cover,
                                     ),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                            ),
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.4), // Top shadow for back button
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.8),
+                                    ],
+                                    stops: const [0.0, 0.3, 1.0],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                left: 24,
+                                right: 24,
+                                top: MediaQuery.of(context).padding.top + 40,
+                                bottom: 50,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                      ),
+                                    ),
+                                    child: widget.subject.backgroundImageUrl != null
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(16),
+                                            child: Image.network(
+                                              widget.subject.backgroundImageUrl!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) => Icon(
+                                                widget.subject.icon,
+                                                size: 32,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        : Icon(
+                                            widget.subject.icon,
+                                            size: 32,
+                                            color: Colors.white,
+                                          ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    widget.subject.name,
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    widget.subject.description,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      height: 1.4,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
+                      ),
+                    ),
+                  ),
+                  // Back Button Overlay
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 10,
+                    left: 10,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(110.0),
+              child: Container(
+                height: 110,
+                padding: const EdgeInsets.symmetric(horizontal: 24).copyWith(bottom: 20),
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStatCard(
+                        _isLoadingChapters ? '-' : '$_totalChapters',
+                        'Chapters',
+                        Icons.menu_book_rounded,
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.grey.shade200,
+                      ),
+                      _buildStatCard(
+                        _isLoadingChapters ? '-' : '$_totalVideos',
+                        'Videos',
+                        Icons.play_circle_filled_rounded,
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.grey.shade200,
+                      ),
+                      _buildStatCard(
+                        _isLoadingChapters ? '-' : '$_totalActivities',
+                        'Activities',
+                        Icons.local_activity_rounded,
                       ),
                     ],
                   ),
@@ -378,217 +416,60 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
             ),
           ),
 
-          // Content
+          // Chapters Section
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                // Subject Image Section
-                Container(
-                  width: double.infinity,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
+            child: Container(
+              color: const Color(0xFFF8F9FA),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Positioned.fill(
-                        child:
-                            widget.subject.backgroundImageUrl != null
-                                ? Image.network(
-                                  widget.subject.backgroundImageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Image.asset(
-                                      widget.subject.imagePath,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: widget.subject.colors,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                )
-                                : Image.asset(
-                                  widget.subject.imagePath,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: widget.subject.colors,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                      ),
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.3),
-                                Colors.black.withValues(alpha: 0.6),
-                              ],
-                            ),
-                          ),
+                      const Text(
+                        'Course Content',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkNavy,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryOrange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
                           children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: widget.subject.backgroundImageUrl != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(14),
-                                      child: Image.network(
-                                        widget.subject.backgroundImageUrl!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => Icon(
-                                          widget.subject.icon,
-                                          size: 32,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    )
-                                  : Icon(
-                                      widget.subject.icon,
-                                      size: 32,
-                                      color: Colors.white,
-                                    ),
+                            const Icon(
+                              Icons.school,
+                              size: 14,
+                              color: AppColors.primaryOrange,
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 6),
                             Text(
-                              widget.subject.name,
+                              _className ?? 'Class',
                               style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.subject.description,
-                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.95),
-                                height: 1.4,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryOrange,
                               ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                _buildStatCard(
-                                  _isLoadingChapters ? '-' : '$_totalChapters',
-                                  'Chapters',
-                                ),
-                                const SizedBox(width: 12),
-                                _buildStatCard(
-                                  _isLoadingChapters ? '-' : '$_totalVideos',
-                                  'Videos',
-                                ),
-                                const SizedBox(width: 12),
-                                _buildStatCard(
-                                  _isLoadingChapters
-                                      ? '-'
-                                      : '$_totalActivities',
-                                  'Activities',
-                                ),
-                              ],
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                ),
-
-                // Chapters section
-                Container(
-                  color: const Color(0xFFF8F9FA),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Your Chapters',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkNavy,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.school,
-                                  size: 14,
-                                  color: AppColors.textGray.withValues(alpha: 0.8),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  _className ?? 'Class',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.darkNavy,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildChapterContent(),
-                    ],
-                  ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  _buildChapterContent(),
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           ),
         ],
@@ -602,29 +483,30 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     if (_isLoadingChapters) {
       return const Padding(
         padding: EdgeInsets.all(20.0),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primaryOrange)),
       );
     }
     if (_chaptersError != null) {
       return Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Center(child: Text(_chaptersError!)),
+        child: Center(child: Text(_chaptersError!, style: const TextStyle(color: Colors.red))),
       );
     }
     if (_chapters.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(20.0),
-        child: Center(child: Text('No chapters available')),
+        child: Center(child: Text('No chapters available', style: TextStyle(color: AppColors.textGray))),
       );
     }
 
     return ListView.builder(
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _chapters.length,
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(bottom: 14),
           child: ChapterListItem(
             chapter: _chapters[index],
             color: widget.subject.colors[0],
@@ -635,38 +517,34 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     );
   }
 
-  Widget _buildStatCard(String value, String label) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
+  Widget _buildStatCard(String value, String label, IconData icon) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          color: widget.subject.colors[0],
+          size: 20,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.white.withValues(alpha: 0.9),
-                height: 1.2,
-              ),
-            ),
-          ],
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkNavy,
+          ),
         ),
-      ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.textGray,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -686,3 +564,4 @@ class ChapterData {
     this.isLocked = false,
   });
 }
+
