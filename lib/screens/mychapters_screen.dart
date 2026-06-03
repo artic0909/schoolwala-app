@@ -208,7 +208,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
           // Sticky Subject Header and Stats Panel
           SliverAppBar(
             pinned: true,
-            expandedHeight: 250.0, // Image height minus overlap
+            expandedHeight: 310.0, // Increased to ensure plenty of room for text
             toolbarHeight: 0.0,
             backgroundColor: const Color(0xFFF8F9FA), // Covers notch when pinned
             automaticallyImplyLeading: false,
@@ -223,11 +223,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                     child: Container(color: const Color(0xFFF8F9FA)),
                   ),
                   // The Curved Image
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 320, // Extends down to overlap with stats panel
+                  Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: const BorderRadius.only(
@@ -286,8 +282,8 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                               padding: EdgeInsets.only(
                                 left: 24,
                                 right: 24,
-                                top: MediaQuery.of(context).padding.top + 40,
-                                bottom: 50,
+                                top: MediaQuery.of(context).padding.top + 20, // Moved up
+                                bottom: 130, // Maintains space above stats panel
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,17 +327,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                       height: 1.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    widget.subject.description,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white.withValues(alpha: 0.9),
-                                      height: 1.4,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  
                                 ],
                               ),
                             ),
@@ -428,7 +414,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Course Content',
+                        'Subject Chapters',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
