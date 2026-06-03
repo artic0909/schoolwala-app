@@ -9,6 +9,7 @@ import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
+import '../widgets/app_drawer.dart';
 
 class MyVideosScreen extends StatefulWidget {
   final ChapterData chapter;
@@ -532,7 +533,8 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
+      drawer: AppDrawer(studentName: widget.studentName, currentRoute: 'My Classes'),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 1),
     );
   }
 

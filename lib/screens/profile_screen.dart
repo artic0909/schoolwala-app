@@ -5,6 +5,7 @@ import 'profile_edit_screen.dart';
 import 'splash_screen.dart';
 import '../services/auth_service.dart';
 import '../widgets/global_bottom_bar.dart';
+import '../widgets/app_drawer.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String studentName;
@@ -138,10 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+
           title: const Text(
             'My Profile',
             style: TextStyle(
@@ -154,6 +152,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         body: const Center(
           child: CircularProgressIndicator(color: AppColors.primaryOrange),
         ),
+        drawer: AppDrawer(studentName: widget.studentName, currentRoute: 'Profile'),
+        bottomNavigationBar: const GlobalBottomBar(currentIndex: 3),
       );
     }
 
@@ -163,10 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+
           title: const Text(
             'My Profile',
             style: TextStyle(
@@ -191,6 +188,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             ],
           ),
         ),
+        drawer: AppDrawer(studentName: widget.studentName, currentRoute: 'Profile'),
+        bottomNavigationBar: const GlobalBottomBar(currentIndex: 3),
       );
     }
 
@@ -203,10 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.darkNavy),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+
         title: const Text(
           'My Profile',
           style: TextStyle(
@@ -591,7 +587,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       ),
-      bottomNavigationBar: const GlobalBottomBar(currentIndex: 0),
+      drawer: AppDrawer(studentName: widget.studentName, currentRoute: 'Profile'),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 3),
     );
   }
 

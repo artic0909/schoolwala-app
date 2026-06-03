@@ -8,6 +8,7 @@ import '../screens/payment_screen.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
+import '../widgets/app_drawer.dart';
 
 class MyChaptersScreen extends StatefulWidget {
   final SubjectData subject;
@@ -592,7 +593,8 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
+      drawer: AppDrawer(studentName: widget.studentName, currentRoute: 'My Classes'),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 1),
     );
   }
 

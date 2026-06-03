@@ -10,7 +10,8 @@ import '../screens/myclass_screen.dart';
 class AppDrawer extends StatefulWidget {
   final String studentName;
 
-  const AppDrawer({super.key, required this.studentName});
+  final String currentRoute;
+  const AppDrawer({super.key, required this.studentName, this.currentRoute = 'Home'});
 
   @override
   State<AppDrawer> createState() => _AppDrawerState();
@@ -189,6 +190,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 _buildDrawerItem(
                   icon: Icons.person_rounded,
                   title: 'My Profile',
+                  isSelected: widget.currentRoute == 'Profile',
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -258,25 +260,27 @@ class _AppDrawerState extends State<AppDrawer> {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    bool isSelected = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       child: ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        tileColor: isSelected ? AppColors.primaryOrange.withValues(alpha: 0.1) : Colors.transparent,
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primaryOrange.withValues(alpha: 0.1),
+            color: isSelected ? AppColors.primaryOrange : AppColors.primaryOrange.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: AppColors.primaryOrange),
+          child: Icon(icon, color: isSelected ? Colors.white : AppColors.primaryOrange),
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.darkNavy,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+            color: isSelected ? AppColors.primaryOrange : AppColors.darkNavy,
           ),
         ),
         onTap: onTap,
