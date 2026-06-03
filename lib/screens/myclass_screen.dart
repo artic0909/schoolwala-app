@@ -6,7 +6,6 @@ import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
 import '../widgets/app_drawer.dart';
-import '../screens/fees_screen.dart';
 import '../screens/payment_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -259,18 +258,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                           'Current Fees',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkNavy),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => FeesScreen(studentName: widget.studentName)),
-                            );
-                          },
-                          child: Text(
-                            'View Details',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.withValues(alpha: 0.8)),
-                          ),
-                        ),
+                    
                       ],
                     ),
                   ),

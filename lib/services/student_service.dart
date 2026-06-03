@@ -362,4 +362,40 @@ class StudentService {
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
+
+  // Submit Support Ticket
+  static Future<Map<String, dynamic>> submitSupport(Map<String, dynamic> data) async {
+    try {
+      // It is a public API but we can send headers if we want, or just send regular POST
+      final headers = await AuthService.getAuthHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConstants.contactUsEndpoint),
+        body: json.encode(data),
+        headers: headers,
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': json.decode(response.body)};
+      }
+      return {'success': false, 'message': 'Failed to submit support ticket'};
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
+  // Get Support History
+  static Future<Map<String, dynamic>> getSupportHistory() async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
+      final response = await http.get(
+        Uri.parse(ApiConstants.supportHistoryEndpoint),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': json.decode(response.body)};
+      }
+      return {'success': false, 'message': 'Failed to get support history'};
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
 }

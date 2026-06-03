@@ -109,7 +109,6 @@ class _FeesScreenState extends State<FeesScreen> {
     final hasSubscription = _paymentInfo!['has_active_subscription'] ?? false;
     final feesData = _paymentInfo!['fees'];
     final classData = _paymentInfo!['class'];
-    final latestTransaction = _paymentInfo!['latest_transaction'];
     final currentSubscription = _paymentInfo!['current_subscription'];
 
     return SingleChildScrollView(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_constants.dart';
 import '../services/student_service.dart';
 import '../services/auth_service.dart';
@@ -9,6 +8,8 @@ import '../screens/myclass_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/transactions_screen.dart';
 import '../screens/fees_screen.dart';
+import '../screens/privacy_policy_screen.dart';
+import '../screens/support_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final String studentName;
@@ -251,22 +252,32 @@ class _AppDrawerState extends State<AppDrawer> {
                 _buildDrawerItem(
                   icon: Icons.privacy_tip_rounded,
                   title: 'Privacy Policy',
-                  onTap: () async {
+                  isSelected: widget.currentRoute == 'Privacy Policy',
+                  onTap: () {
                     Navigator.pop(context);
-                    final url = Uri.parse('https://schoolwala.info/privacy-policy');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url);
+                    if (widget.currentRoute != 'Privacy Policy') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PrivacyPolicyScreen(studentName: widget.studentName),
+                        ),
+                      );
                     }
                   },
                 ),
                 _buildDrawerItem(
                   icon: Icons.support_agent_rounded,
                   title: 'Support',
-                  onTap: () async {
+                  isSelected: widget.currentRoute == 'Support',
+                  onTap: () {
                     Navigator.pop(context);
-                    final url = Uri.parse('https://schoolwala.info/contact');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url);
+                    if (widget.currentRoute != 'Support') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SupportScreen(studentName: widget.studentName),
+                        ),
+                      );
                     }
                   },
                 ),

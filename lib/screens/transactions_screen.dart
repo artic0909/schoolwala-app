@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../services/student_service.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/global_bottom_bar.dart';
 import 'package:intl/intl.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -62,6 +63,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ),
       drawer: AppDrawer(studentName: widget.studentName, currentRoute: 'Transactions'),
       body: _buildBody(),
+      bottomNavigationBar: const GlobalBottomBar(currentIndex: 4),
     );
   }
 

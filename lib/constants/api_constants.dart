@@ -39,6 +39,7 @@ class ApiConstants {
   static const String studentProfileEndpoint = '$baseUrl/student/profile';
   static const String updateProfileEndpoint = '$baseUrl/student/profile/update';
   static const String changePasswordEndpoint = '$baseUrl/student/change-password';
+  static const String supportHistoryEndpoint = '$baseUrl/student/support/history';
 
   // -----------------------------------------------
   // CLASS → SUBJECTS → CHAPTERS → VIDEOS Hierarchy
