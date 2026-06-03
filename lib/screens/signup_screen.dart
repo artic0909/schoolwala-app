@@ -366,7 +366,9 @@ class _SignUpScreenState extends State<SignUpScreen>
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryOrange.withValues(alpha: 0.1),
+                              color: AppColors.primaryOrange.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(24),
                             ),
                             child: Image.asset(
@@ -723,7 +725,6 @@ class _SignUpScreenState extends State<SignUpScreen>
                               style: TextStyle(
                                 fontSize: 14,
                                 color: AppColors.primaryOrange,
-                                decoration: TextDecoration.underline,
                               ),
                             ),
                           ),

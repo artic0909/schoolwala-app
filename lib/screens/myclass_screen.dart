@@ -407,36 +407,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
               children: [
                 const SizedBox(height: 30),
 
-                // Main heading
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Designed for Every Student',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkNavy,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Comprehensive curriculum aligned with WBBSE, CBSE, ICSE, and State Boards.\nEngaging content designed to make learning fun and effective.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textGray,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
+   
                 // Class selector button
                 Center(
                   child: Container(
