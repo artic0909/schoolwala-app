@@ -19,7 +19,6 @@ class AppDrawer extends StatefulWidget {
 class _AppDrawerState extends State<AppDrawer> {
   List<SubjectData> _subjects = [];
   bool _isLoadingSubjects = true;
-  String _className = 'My Classes';
 
   @override
   void initState() {
@@ -36,17 +35,11 @@ class _AppDrawerState extends State<AppDrawer> {
           List<dynamic> list = [];
           
           if (data is Map) {
-            if (data.containsKey('name')) {
-              _className = data['name']?.toString() ?? 'My Classes';
-            }
             if (data.containsKey('subjects')) {
               list = data['subjects'] ?? [];
             } else if (data.containsKey('data') &&
                 data['data'] is Map &&
                 data['data'].containsKey('subjects')) {
-              if (data['data'].containsKey('name')) {
-                _className = data['data']['name']?.toString() ?? 'My Classes';
-              }
               list = data['data']['subjects'] ?? [];
             } else if (data.containsKey('data') && data['data'] is List) {
               list = data['data'];
@@ -299,6 +292,10 @@ class _AppDrawerState extends State<AppDrawer> {
         final student = userData?['student'] ?? userData;
         final profile = userData?['profile'] ?? userData;
         
+        final name = (student is Map)
+            ? (student['student_name'] ?? widget.studentName)
+            : widget.studentName;
+            
         final studentId = (student is Map) 
             ? student['student_id']?.toString() ?? student['id']?.toString() ?? 'ID: N/A' 
             : 'ID: N/A';
@@ -348,7 +345,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.studentName,
+                      name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
