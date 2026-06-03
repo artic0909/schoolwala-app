@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
@@ -20,6 +21,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  late PageController _pageController;
+  Timer? _carouselTimer;
 
   bool _isLoading = true;
   Map<String, dynamic>? _profileData;
@@ -37,6 +40,16 @@ class _ProfileScreenState extends State<ProfileScreen>
       begin: 0,
       end: 10,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _pageController = PageController(initialPage: 1000); // Start at a large number for infinite scroll
+    _carouselTimer = Timer.periodic(const Duration(seconds: 3), (Timer timer) {
+      if (_pageController.hasClients) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
 
     _loadProfile();
   }
@@ -64,6 +77,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   void dispose() {
+    _carouselTimer?.cancel();
+    _pageController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -207,44 +222,38 @@ class _ProfileScreenState extends State<ProfileScreen>
               clipBehavior: Clip.none,
               alignment: Alignment.topCenter,
               children: [
-                // Cover Photo
+                // Cover Photo Carousel
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                  child: SizedBox(
+                    height: 240,
+                    width: double.infinity,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemBuilder: (context, index) {
+                        final imageIndex = (index % 7) + 1;
+                        return Image.asset(
+                          'assets/images/$imageIndex.jpeg',
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                
+                // Dark overlay so icons/text are visible if needed
                 Container(
                   height: 240,
                   width: double.infinity,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF1E2A4F), // Dark Navy variant
-                        Color(0xFF2C3E75),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(30),
                       bottomRight: Radius.circular(30),
                     ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Subtle decorative patterns
-                      Positioned(
-                        top: -50,
-                        right: -50,
-                        child: CircleAvatar(
-                          radius: 100,
-                          backgroundColor: Colors.white.withValues(alpha: 0.05),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -30,
-                        left: -20,
-                        child: CircleAvatar(
-                          radius: 70,
-                          backgroundColor: Colors.white.withValues(alpha: 0.03),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
                 
