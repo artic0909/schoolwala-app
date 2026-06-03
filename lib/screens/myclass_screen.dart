@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../widgets/subject_card.dart';
-import '../widgets/curriculum_card.dart';
-import '../widgets/feature_card.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/profile_screen.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
+import '../widgets/app_drawer.dart';
 
 class MyClassScreen extends StatefulWidget {
   final String studentName;
@@ -151,62 +150,6 @@ class _MyClassScreenState extends State<MyClassScreen> {
     }
   }
 
-  final List<CurriculumFeature> curriculumFeatures = [
-    CurriculumFeature(
-      icon: '📊',
-      title: 'Structured Learning Path',
-      description:
-          'Our curriculum is divided into levels and modules that progressively build concepts from basic to advanced.',
-    ),
-    CurriculumFeature(
-      icon: '🎬',
-      title: 'Animated Video Lessons',
-      description:
-          'Complex concepts broken down into bite-sized, engaging animated videos for better understanding.',
-    ),
-    CurriculumFeature(
-      icon: '🧩',
-      title: 'Practice & Assessments',
-      description:
-          'Regular practice problems and assessments to reinforce learning and track progress.',
-    ),
-  ];
-
-  final List<WhyChooseFeature> whyChooseFeatures = [
-    WhyChooseFeature(
-      icon: Icons.school,
-      title: 'Expert Educators',
-      description:
-          'Content created by subject matter experts with teaching experience.',
-      color: Color(0xFFFFB74D),
-      imagePath: 'assets/images/1.jpeg',
-    ),
-    WhyChooseFeature(
-      icon: Icons.phone_android,
-      title: 'Learn Anywhere',
-      description:
-          'Access courses on mobile, tablet, or desktop at your convenience.',
-      color: Color(0xFFFFB74D),
-      imagePath: 'assets/images/3.jpeg',
-    ),
-    WhyChooseFeature(
-      icon: Icons.videogame_asset,
-      title: 'Gamified Learning',
-      description:
-          'Interactive games and quizzes to make learning fun and engaging.',
-      color: Color(0xFFFFB74D),
-      imagePath: 'assets/images/5.jpeg',
-    ),
-    WhyChooseFeature(
-      icon: Icons.trending_up,
-      title: 'Progress Tracking',
-      description:
-          'Detailed reports to track your child\'s progress and performance.',
-      color: Color(0xFFFFB74D),
-      imagePath: 'assets/images/7.jpeg',
-    ),
-  ];
-
   void _handleSubjectTap(SubjectData subject) {
     // Navigate to MyChaptersScreen
     Navigator.push(
@@ -226,10 +169,12 @@ class _MyClassScreenState extends State<MyClassScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
+      drawer: AppDrawer(studentName: widget.studentName),
       body: CustomScrollView(
         slivers: [
           // App Bar
           SliverAppBar(
+            automaticallyImplyLeading: false,
             floating: true,
             pinned: true,
             backgroundColor: Colors.white,
@@ -254,6 +199,13 @@ class _MyClassScreenState extends State<MyClassScreen> {
                   ),
                   child: Row(
                     children: [
+                      Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(Icons.menu, color: AppColors.darkNavy),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Logo with gradient background
                       Container(
                         width: 50,
@@ -537,33 +489,5 @@ class SubjectData {
     required this.imagePath,
     required this.colors,
     this.backgroundImageUrl,
-  });
-}
-
-class CurriculumFeature {
-  final String icon;
-  final String title;
-  final String description;
-
-  CurriculumFeature({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-}
-
-class WhyChooseFeature {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color color;
-  final String imagePath;
-
-  WhyChooseFeature({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.color,
-    required this.imagePath,
   });
 }
