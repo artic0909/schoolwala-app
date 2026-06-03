@@ -105,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Check for auth token
     final token = await AuthService.getToken();
-    print('SplashScreen: Token found: $token');
+    debugPrint('SplashScreen: Token found: $token');
     final user = await AuthService.getCurrentUser();
 
     // Navigate
@@ -208,7 +208,7 @@ class _SplashScreenState extends State<SplashScreen>
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 30,
                               offset: const Offset(0, 10),
                             ),

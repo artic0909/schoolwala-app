@@ -240,7 +240,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -267,7 +267,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryOrange.withOpacity(0.3),
+                              color: AppColors.primaryOrange.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -321,7 +321,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                                 'Student',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppColors.textGray.withOpacity(0.8),
+                                  color: AppColors.textGray.withValues(alpha: 0.8),
                                 ),
                               ),
                             ],
@@ -382,7 +382,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primaryOrange.withOpacity(
+                                    color: AppColors.primaryOrange.withValues(alpha: 
                                       0.3,
                                     ),
                                     blurRadius: 10,
@@ -453,7 +453,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryOrange.withOpacity(0.3),
+                          color: AppColors.primaryOrange.withValues(alpha: 0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -557,7 +557,7 @@ class _MyClassScreenState extends State<MyClassScreen> {
                           'Our structured approach ensures students build strong foundations and\ndevelop critical thinking skills',
                           style: TextStyle(
                             fontSize: 16,
-                            color: AppColors.textGray.withOpacity(0.9),
+                            color: AppColors.textGray.withValues(alpha: 0.9),
                             height: 1.6,
                           ),
                           textAlign: TextAlign.center,

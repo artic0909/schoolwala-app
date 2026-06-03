@@ -275,7 +275,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.primaryOrange.withOpacity(0.5),
+                          color: AppColors.primaryOrange.withValues(alpha: 0.5),
                           width: 4,
                         ),
                         image: DecorationImage(

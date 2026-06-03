@@ -196,7 +196,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryOrange.withOpacity(0.3),
+                            color: AppColors.primaryOrange.withValues(alpha: 0.3),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           ),
@@ -264,7 +264,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.inputBorder.withOpacity(0.5),
+                              color: AppColors.inputBorder.withValues(alpha: 0.5),
                             ),
                           ),
                           child: Column(
@@ -307,7 +307,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: AppColors.inputBorder.withOpacity(
+                                    color: AppColors.inputBorder.withValues(alpha: 
                                       0.5,
                                     ),
                                   ),

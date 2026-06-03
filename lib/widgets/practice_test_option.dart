@@ -29,11 +29,11 @@ class PracticeTestOption extends StatelessWidget {
     Color backgroundColor = Colors.white;
     Color textColor = AppColors.darkNavy;
     Color labelColor = AppColors.primaryOrange;
-    Color labelBgColor = AppColors.primaryOrange.withOpacity(0.1);
+    Color labelBgColor = AppColors.primaryOrange.withValues(alpha: 0.1);
 
     if (isSelected) {
       borderColor = AppColors.primaryOrange;
-      backgroundColor = AppColors.primaryOrange.withOpacity(0.05);
+      backgroundColor = AppColors.primaryOrange.withValues(alpha: 0.05);
       labelColor = Colors.white;
       labelBgColor = AppColors.primaryOrange;
     }

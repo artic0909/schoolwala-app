@@ -328,7 +328,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                                       boxShadow: [
                                         BoxShadow(
                                           color: AppColors.primaryOrange
-                                              .withOpacity(0.3),
+                                              .withValues(alpha: 0.3),
                                           blurRadius: 20,
                                           offset: const Offset(0, 5),
                                         ),
@@ -366,7 +366,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryOrange.withOpacity(0.1),
+                              color: AppColors.primaryOrange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(24),
                             ),
                             child: Image.asset(
@@ -434,7 +434,7 @@ class _SignUpScreenState extends State<SignUpScreen>
       height: 8,
       width: isActive ? 24 : 8,
       decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
+        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(4),
       ),
     );
@@ -565,7 +565,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                         hintText: 'Choose Class',
                         hintStyle: TextStyle(
                           fontSize: 16,
-                          color: AppColors.textGray.withOpacity(0.5),
+                          color: AppColors.textGray.withValues(alpha: 0.5),
                         ),
                         prefixIcon: const Icon(
                           Icons.school_outlined,

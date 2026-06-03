@@ -222,7 +222,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -249,7 +249,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryOrange.withOpacity(0.3),
+                              color: AppColors.primaryOrange.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -300,7 +300,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                 'Student',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.textGray.withOpacity(0.8),
+                                  color: AppColors.textGray.withValues(alpha: 0.8),
                                 ),
                               ),
                             ],
@@ -358,7 +358,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primaryOrange.withOpacity(
+                                    color: AppColors.primaryOrange.withValues(alpha: 
                                       0.3,
                                     ),
                                     blurRadius: 10,
@@ -388,7 +388,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -447,8 +447,8 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.3),
-                                Colors.black.withOpacity(0.6),
+                                Colors.black.withValues(alpha: 0.3),
+                                Colors.black.withValues(alpha: 0.6),
                               ],
                             ),
                           ),
@@ -463,7 +463,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                               width: 60,
                               height: 60,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Icon(
@@ -487,7 +487,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                               widget.subject.description,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.white.withOpacity(0.95),
+                                color: Colors.white.withValues(alpha: 0.95),
                                 height: 1.4,
                               ),
                               maxLines: 3,
@@ -553,7 +553,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                                 Icon(
                                   Icons.school,
                                   size: 14,
-                                  color: AppColors.textGray.withOpacity(0.8),
+                                  color: AppColors.textGray.withValues(alpha: 0.8),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -625,9 +625,9 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,7 +645,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 height: 1.2,
               ),
             ),

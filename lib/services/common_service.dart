@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
@@ -16,7 +17,7 @@ class CommonService {
       }
       return [];
     } catch (e) {
-      print('Get Classes Error: $e');
+      debugPrint('Get Classes Error: $e');
       return [];
     }
   }

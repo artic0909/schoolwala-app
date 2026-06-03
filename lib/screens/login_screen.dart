@@ -265,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen>
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryOrange.withOpacity(0.1),
+                              color: AppColors.primaryOrange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(24),
                             ),
                             child: Image.asset(
@@ -342,7 +342,7 @@ class _LoginScreenState extends State<LoginScreen>
       height: 8,
       width: isActive ? 24 : 8,
       decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
+        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(4),
       ),
     );

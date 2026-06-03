@@ -70,7 +70,7 @@ class GlobalBottomBar extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -82,7 +82,7 @@ class GlobalBottomBar extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.primaryOrange,
-        unselectedItemColor: AppColors.textGray.withOpacity(0.6),
+        unselectedItemColor: AppColors.textGray.withValues(alpha: 0.6),
         selectedFontSize: 12,
         unselectedFontSize: 12,
         elevation: 0,

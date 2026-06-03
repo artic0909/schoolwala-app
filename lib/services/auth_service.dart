@@ -24,7 +24,7 @@ class AuthService {
     final token = await getToken();
     if (token != null) {
       getProfile().catchError((e) {
-        print('AuthService: Profile auto-refresh failed: $e');
+        debugPrint('AuthService: Profile auto-refresh failed: $e');
         return {'success': false, 'message': e.toString()};
       });
     }
@@ -34,7 +34,7 @@ class AuthService {
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_tokenKey);
-    print('AuthService: Details retrieved token: $token');
+    debugPrint('AuthService: Details retrieved token: $token');
     return token;
   }
 
@@ -60,7 +60,7 @@ class AuthService {
         headers: {'Accept': 'application/json'},
       );
 
-      print('Login Response Status: ${response.statusCode}');
+      debugPrint('Login Response Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -70,7 +70,7 @@ class AuthService {
           final prefs = await SharedPreferences.getInstance();
           if (data['data']['token'] != null) {
             await prefs.setString(_tokenKey, data['data']['token']);
-            print('AuthService: Token saved: ${data['data']['token']}');
+            debugPrint('AuthService: Token saved: ${data['data']['token']}');
           }
           await prefs.setString(_userKey, json.encode(data['data']));
           userNotifier.value = data['data'];
@@ -84,7 +84,7 @@ class AuthService {
         };
       }
     } catch (e) {
-      print('Login Error: $e');
+      debugPrint('Login Error: $e');
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
@@ -98,7 +98,7 @@ class AuthService {
         headers: {'Accept': 'application/json'},
       );
 
-      print('Register Response Status: ${response.statusCode}');
+      debugPrint('Register Response Status: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = json.decode(response.body);
@@ -130,7 +130,7 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Register Error: $e');
+      debugPrint('Register Error: $e');
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
@@ -147,7 +147,7 @@ class AuthService {
       userNotifier.value = null;
       return true;
     } catch (e) {
-      print('Logout Error: $e');
+      debugPrint('Logout Error: $e');
       return false; // Still return false, but we might want to clear local data anyway
     }
   }

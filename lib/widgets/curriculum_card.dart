@@ -16,7 +16,7 @@ class CurriculumCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 5),
           ),
@@ -58,7 +58,7 @@ class CurriculumCard extends StatelessWidget {
             feature.description,
             style: TextStyle(
               fontSize: 15,
-              color: AppColors.textGray.withOpacity(0.9),
+              color: AppColors.textGray.withValues(alpha: 0.9),
               height: 1.6,
             ),
           ),

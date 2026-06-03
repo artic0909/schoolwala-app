@@ -22,7 +22,6 @@ class PlayVideoScreen extends StatefulWidget {
 class _PlayVideoScreenState extends State<PlayVideoScreen> {
   late YoutubePlayerController _controller;
   String? _videoId;
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -49,15 +48,10 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
     try {
       final result = await StudentService.getVideoDetails(widget.video.id);
       if (result['success'] && mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        // Future updates based on response data
       }
     } catch (e) {
       debugPrint('Error loading video details: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 

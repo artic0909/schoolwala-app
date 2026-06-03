@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -55,7 +56,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       }
     } catch (e) {
       debugPrint('Error picking image: $e');
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Failed to pick image')));
@@ -152,23 +153,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     final result = await StudentService.storePayment(fields, _imageFile!);
 
-    if (mounted) {
-      setState(() => _isSubmitting = false);
-      if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
+    if (!context.mounted) return;
+    setState(() => _isSubmitting = false);
+    if (result['success']) {
+      ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Payment details submitted successfully!'),
           ),
         );
         Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pop(context);
+          if (context.mounted) {
+            Navigator.pop(context);
+          }
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result['message'] ?? 'Submission failed')),
         );
       }
-    }
   }
 
   @override
@@ -282,7 +284,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -306,7 +308,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     'Complete your subscription payment easily',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontFamily: 'Poppins',
                     ),
                   ),
@@ -335,7 +337,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.darkNavy.withOpacity(0.2),
+                          color: AppColors.darkNavy.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -415,7 +417,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -501,7 +503,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textGray.withOpacity(0.8),
+                            color: AppColors.textGray.withValues(alpha: 0.8),
                             fontFamily: 'Poppins',
                           ),
                         ),
@@ -519,7 +521,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -634,7 +636,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                                   ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.black
-                                                        .withOpacity(0.5),
+                                                        .withValues(alpha: 0.5),
                                                     shape: BoxShape.circle,
                                                   ),
                                                   child: const Icon(
@@ -672,7 +674,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 'Accepted formats: JPG, PNG, GIF (Max: 2MB)',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: AppColors.textGray.withOpacity(0.6),
+                                  color: AppColors.textGray.withValues(alpha: 0.6),
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -694,7 +696,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 ),
                                 elevation: 4,
                                 shadowColor: AppColors.primaryOrange
-                                    .withOpacity(0.4),
+                                    .withValues(alpha: 0.4),
                               ),
                               child:
                                   _isSubmitting
@@ -743,7 +745,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
             fontSize: 14,
             fontFamily: 'Poppins',

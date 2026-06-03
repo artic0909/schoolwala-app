@@ -196,7 +196,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     final student = _profileData!['student'];
     final profile = _profileData!['profile'];
-    final classDetails = _profileData!['class_details'];
     final interests = _getInterests();
 
     return Scaffold(
@@ -242,7 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             color: const Color(0xFFFF9F43),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.orange.withOpacity(0.3),
+                                color: Colors.orange.withValues(alpha: 0.3),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -416,7 +415,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.orange.withOpacity(0.3),
+                                  color: Colors.orange.withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -447,7 +446,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         GestureDetector(
                           onTap: () async {
                             await AuthService.logout();
-                            if (mounted) {
+                            if (context.mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
                                   builder: (context) => const SplashScreen(),
@@ -465,12 +464,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: Colors.redAccent.withOpacity(0.5),
+                                color: Colors.redAccent.withValues(alpha: 0.5),
                                 width: 1.5,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.redAccent.withOpacity(0.05),
+                                  color: Colors.redAccent.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -547,7 +546,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 width: 60,
                 margin: const EdgeInsets.only(top: 4, bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.lightBlue.withOpacity(0.3),
+                  color: Colors.lightBlue.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -605,7 +604,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -630,7 +629,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -640,7 +639,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: iconColor.withOpacity(0.1),
+            backgroundColor: iconColor.withValues(alpha: 0.1),
             radius: 20,
             child: Icon(icon, color: iconColor, size: 24),
           ),

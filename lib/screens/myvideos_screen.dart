@@ -34,8 +34,6 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
 
   // Chapter info from backend
   String _chapterName = '';
-  String _subjectName = '';
-  int _chapterIndex = 1;
   bool _isFirstChapter = false;
 
   @override
@@ -62,11 +60,9 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
         final chapterInfo = videoData['chapter'];
         if (chapterInfo != null) {
           _chapterName = chapterInfo['chapter_name'] ?? widget.chapter.title;
-          _subjectName = chapterInfo['subject_name'] ?? widget.subject.name;
         }
 
         _isFirstChapter = videoData['is_first_chapter'] ?? false;
-        _chapterIndex = videoData['chapter_index'] ?? widget.chapter.number;
 
         // Extract videos
         final List<dynamic> list = videoData['videos'] ?? [];
@@ -211,7 +207,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -238,7 +234,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryOrange.withOpacity(0.3),
+                              color: AppColors.primaryOrange.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -289,7 +285,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                                 'Student',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.textGray.withOpacity(0.8),
+                                  color: AppColors.textGray.withValues(alpha: 0.8),
                                 ),
                               ),
                             ],
@@ -347,7 +343,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primaryOrange.withOpacity(
+                                    color: AppColors.primaryOrange.withValues(alpha: 
                                       0.3,
                                     ),
                                     blurRadius: 10,
@@ -377,7 +373,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -436,8 +432,8 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.3),
-                                Colors.black.withOpacity(0.6),
+                                Colors.black.withValues(alpha: 0.3),
+                                Colors.black.withValues(alpha: 0.6),
                               ],
                             ),
                           ),
@@ -452,7 +448,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -553,7 +549,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
               Icon(
                 Icons.lock_outline,
                 size: 64,
-                color: AppColors.textGray.withOpacity(0.5),
+                color: AppColors.textGray.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -588,9 +584,9 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -627,7 +623,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -664,7 +660,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -684,7 +680,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -722,7 +718,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                     video.description,
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textGray.withOpacity(0.9),
+                      color: AppColors.textGray.withValues(alpha: 0.9),
                       height: 1.4,
                     ),
                     maxLines: 2,
@@ -738,12 +734,12 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF3B9EFF).withOpacity(0.1),
+                                color: const Color(0xFF3B9EFF).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: const Color(
                                     0xFF3B9EFF,
-                                  ).withOpacity(0.3),
+                                  ).withValues(alpha: 0.3),
                                   width: 1,
                                 ),
                               ),
@@ -782,12 +778,12 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
                               decoration: BoxDecoration(
                                 color:
                                     video.hasSubmittedTest
-                                        ? const Color(0xFFFFC107).withOpacity(
+                                        ? const Color(0xFFFFC107).withValues(alpha: 
                                           0.1,
                                         ) // Yellow tint
                                         : const Color(
                                           0xFF4CAF50,
-                                        ).withOpacity(0.1), // Green tint
+                                        ).withValues(alpha: 0.1), // Green tint
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color:

@@ -365,7 +365,7 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -425,7 +425,7 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppColors.inputBorder.withOpacity(0.5),
+                    color: AppColors.inputBorder.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Column(

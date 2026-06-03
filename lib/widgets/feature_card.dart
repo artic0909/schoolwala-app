@@ -18,7 +18,7 @@ class FeatureCard extends StatelessWidget {
               feature.imagePath,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return Container(color: feature.color.withOpacity(0.1));
+                return Container(color: feature.color.withValues(alpha: 0.1));
               },
             ),
           ),
@@ -31,8 +31,8 @@ class FeatureCard extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.7),
+                    Colors.black.withValues(alpha: 0.4),
+                    Colors.black.withValues(alpha: 0.7),
                   ],
                 ),
               ),
@@ -50,7 +50,7 @@ class FeatureCard extends StatelessWidget {
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(feature.icon, size: 32, color: Colors.white),
@@ -76,7 +76,7 @@ class FeatureCard extends StatelessWidget {
                   feature.description,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.95),
+                    color: Colors.white.withValues(alpha: 0.95),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
