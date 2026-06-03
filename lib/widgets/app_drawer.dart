@@ -7,6 +7,7 @@ import '../screens/profile_screen.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/myclass_screen.dart';
 import '../screens/login_screen.dart';
+import '../utils/toast_helper.dart';
 
 class AppDrawer extends StatefulWidget {
   final String studentName;
@@ -208,9 +209,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   isSelected: widget.currentRoute == 'Transactions',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Transactions coming soon')),
-                    );
+                    ToastHelper.showInfo(context, 'Transactions coming soon');
                   },
                 ),
                 _buildDrawerItem(
@@ -219,9 +218,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   isSelected: widget.currentRoute == 'Fees',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Fees coming soon')),
-                    );
+                    ToastHelper.showInfo(context, 'Fees coming soon');
                   },
                 ),
                 _buildDrawerItem(

@@ -7,6 +7,7 @@ import '../widgets/custom_button.dart';
 import '../services/student_service.dart';
 import 'test_result_screen.dart';
 import '../widgets/global_bottom_bar.dart';
+import '../utils/toast_helper.dart';
 
 class PracticeTestScreen extends StatefulWidget {
   final String videoId;
@@ -495,13 +496,9 @@ class _PracticeTestScreenState extends State<PracticeTestScreen> {
                   _questions.where((q) => q.selectedOptionIndex == null).length;
 
               if (unansweredCount > 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Please answer all questions before submitting. ($unansweredCount unanswered)',
-                    ),
-                    backgroundColor: Colors.orange,
-                  ),
+                ToastHelper.showError(
+                  context,
+                  'Please answer all questions before submitting. ($unansweredCount unanswered)',
                 );
                 return;
               }

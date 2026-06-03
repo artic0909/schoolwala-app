@@ -7,6 +7,7 @@ import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'myclass_screen.dart';
 import '../services/auth_service.dart';
+import '../utils/toast_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -115,12 +116,7 @@ class _LoginScreenState extends State<LoginScreen>
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login Successful'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastHelper.showSuccess(context, 'Login Successful');
           // Navigate to MyClass screen
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -130,12 +126,7 @@ class _LoginScreenState extends State<LoginScreen>
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Login Failed'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastHelper.showError(context, result['message'] ?? 'Login Failed');
         }
       }
     }

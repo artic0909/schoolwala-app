@@ -4,6 +4,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../constants/app_constants.dart';
 import '../services/student_service.dart';
 import '../services/auth_service.dart';
+import '../utils/toast_helper.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String studentName;
@@ -80,7 +81,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     try {
       final result = await StudentService.getPaymentInfo();
       if (result['success'] && result['data'] != null) {
-        final data = result['data'];
+        final apiResponse = result['data'];
+        final data = apiResponse['data'] ?? apiResponse;
 
         final classInfo = data['class'];
         if (classInfo != null && mounted) {
@@ -116,10 +118,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final user = await AuthService.getCurrentUser();
       if (user != null && mounted) {
         setState(() {
-          _emailController.text = user['email'] ?? '';
-          _phoneController.text = user['phone'] ?? user['mobile'] ?? '';
+          // Some structures nest the user details under 'student'
+          final studentData = user.containsKey('student') ? user['student'] : user;
+          
+          _emailController.text = studentData['email'] ?? '';
+          _phoneController.text = studentData['phone'] ?? studentData['mobile'] ?? '';
           _studentNameController.text =
-              user['student_name'] ?? widget.studentName;
+              studentData['student_name'] ?? studentData['name'] ?? widget.studentName;
         });
       }
     } catch (e) {
@@ -142,16 +147,21 @@ class _PaymentScreenState extends State<PaymentScreen> {
       if (!orderResult['success']) {
         if (!mounted) return;
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(orderResult['message'] ?? 'Failed to create order')),
-        );
+        ToastHelper.showError(context, orderResult['message'] ?? 'Failed to create order');
         return;
       }
 
-      final orderData = orderResult['data'];
+      // The API response is wrapped in { success: ..., data: ..., message: ... }
+      // AND StudentService returns { success: true, data: json.decode(response.body) }
+      // So orderResult['data'] is the full JSON response body. The actual order is inside orderResult['data']['data']
+      final apiResponse = orderResult['data'];
+      final orderData = apiResponse['data'] ?? apiResponse;
+      
       final String orderId = orderData['order_id'];
       final String key = orderData['key'];
-      final num amountInRupees = orderData['amount'] ?? 0;
+      
+      final amountRaw = orderData['amount'];
+      final num amountInRupees = amountRaw is num ? amountRaw : num.tryParse(amountRaw.toString()) ?? 0;
       final int amountInPaise = (amountInRupees * 100).toInt();
 
       // 2. Setup Razorpay Options
@@ -178,9 +188,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error initiating payment: $e')),
-        );
+        ToastHelper.showError(context, 'Error initiating payment: $e');
       }
     }
   }
@@ -201,25 +209,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
         setState(() => _isSubmitting = false);
         
         if (verifyResult['success']) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Payment successful! Your subscription is active.')),
-          );
+          ToastHelper.showSuccess(context, 'Payment successful! Your subscription is active.');
           
           Future.delayed(const Duration(seconds: 1), () {
-            if (mounted) Navigator.pop(context);
+            if (mounted) Navigator.pop(context, true);
           });
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(verifyResult['message'] ?? 'Payment verification failed.')),
-          );
+          ToastHelper.showError(context, verifyResult['message'] ?? 'Payment verification failed.');
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error verifying payment: $e')),
-        );
+        ToastHelper.showError(context, 'Error verifying payment: $e');
       }
     }
   }
@@ -227,18 +229,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void _handlePaymentError(PaymentFailureResponse response) {
     if (mounted) {
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment Failed: ${response.message ?? "Unknown error"}')),
-      );
+      ToastHelper.showError(context, 'Payment Failed: ${response.message ?? "Unknown error"}');
     }
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
     if (mounted) {
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('External Wallet selected: ${response.walletName}')),
-      );
+      ToastHelper.showInfo(context, 'External wallet selected: ${response.walletName}');
     }
   }
 
@@ -252,45 +250,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
             // Header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 60, bottom: 30),
+              padding: const EdgeInsets.only(top: 70, bottom: 40),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: AppColors.orangeGradient,
+                  colors: [Color(0xFF4f46e5), Color(0xFF6366f1)], // Modern Indigo gradient
                 ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x334f46e5),
+                    blurRadius: 20,
+                    offset: Offset(0, 10),
+                  ),
+                ]
               ),
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      )
                     ),
                     child: const Icon(
-                      Icons.payment,
+                      Icons.shield_outlined,
                       color: Colors.white,
-                      size: 24,
+                      size: 32,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   const Text(
-                    'Make Payment',
+                    'Secure Checkout',
                     style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
                       color: Colors.white,
                       fontFamily: 'Poppins',
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
-                    'Complete your subscription payment securely',
+                    'Complete your payment in seconds',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -311,16 +326,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppColors.darkNavy, Color(0xFF2D3B4E)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
+                        colors: [Color(0xFF1E293B), Color(0xFF334155)], // Slate dark
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.darkNavy.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          color: const Color(0xFF1E293B).withValues(alpha: 0.15),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
@@ -364,12 +379,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -428,10 +443,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4f46e5), // Razorpay brand color matches web theme
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(18),
                                 ),
-                                elevation: 4,
-                                shadowColor: const Color(0xFF4f46e5).withValues(alpha: 0.4),
+                                elevation: 8,
+                                shadowColor: const Color(0xFF4f46e5).withValues(alpha: 0.5),
                               ),
                               child: _isSubmitting
                                   ? const CircularProgressIndicator(

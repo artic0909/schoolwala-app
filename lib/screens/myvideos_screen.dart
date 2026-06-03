@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/toast_helper.dart';
 
 class MyVideosScreen extends StatefulWidget {
   final ChapterData chapter;
@@ -131,12 +132,7 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
   Future<void> _handleDownloadNotes(VideoData video) async {
     final String? noteUrl = video.noteUrl;
     if (noteUrl == null || noteUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No notes available for this video.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastHelper.showError(context, 'No notes available for this video.');
       return;
     }
 
@@ -144,22 +140,12 @@ class _MyVideosScreenState extends State<MyVideosScreen> {
     try {
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not launch notes link: $noteUrl'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastHelper.showError(context, 'Could not launch notes link: $noteUrl');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error launching link: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.showError(context, 'Error launching link: $e');
       }
     }
   }

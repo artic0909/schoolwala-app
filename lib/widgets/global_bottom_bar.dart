@@ -3,6 +3,7 @@ import '../constants/app_constants.dart';
 import '../screens/profile_screen.dart';
 import '../screens/myclass_screen.dart';
 import '../services/auth_service.dart';
+import '../utils/toast_helper.dart';
 
 class GlobalBottomBar extends StatelessWidget {
   final int currentIndex;
@@ -30,7 +31,7 @@ class GlobalBottomBar extends StatelessWidget {
         }
         break;
       case 2: // Fees (Placeholder)
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fees screen coming soon')));
+        ToastHelper.showInfo(context, 'Fees screen coming soon');
         break;
       case 3: // Profile
         Navigator.pushReplacement(

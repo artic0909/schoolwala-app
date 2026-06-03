@@ -3,6 +3,7 @@ import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../services/auth_service.dart';
+import '../utils/toast_helper.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -37,9 +38,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         !RegExp(
           r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
         ).hasMatch(_emailController.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email')),
-      );
+      ToastHelper.showError(context, 'Please enter a valid email');
       return;
     }
 
@@ -58,30 +57,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _currentStep = 1;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('OTP sent to your email!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastHelper.showSuccess(context, 'OTP sent to your email!');
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Failed to send OTP'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.showError(context, result['message'] ?? 'Failed to send OTP');
       }
     }
   }
 
   void _handleVerifyOtp() async {
     if (_otpController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter the OTP')));
+      ToastHelper.showError(context, 'Please enter the OTP');
       return;
     }
 
@@ -103,21 +90,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _currentStep = 2;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('OTP verified successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastHelper.showSuccess(context, 'OTP verified successfully!');
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Invalid OTP'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.showError(context, result['message'] ?? 'Invalid OTP');
       }
     }
   }
@@ -125,15 +102,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void _handleChangePassword() async {
     if (_passwordController.text.isEmpty ||
         _passwordController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
-      );
+      ToastHelper.showError(context, 'Password must be at least 6 characters');
       return;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      ToastHelper.showError(context, 'Passwords do not match');
       return;
     }
 
@@ -154,22 +127,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (result['success']) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastHelper.showSuccess(context, 'Password changed successfully!');
         Navigator.of(context).pop();
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Failed to reset password'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.showError(context, result['message'] ?? 'Failed to reset password');
       }
     }
   }

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
+import '../utils/toast_helper.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final Map<String, dynamic> profileData;
@@ -42,9 +43,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     } catch (e) {
       debugPrint('Error picking image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to pick image')));
+        ToastHelper.showError(context, 'Failed to pick image');
       }
     }
   }
@@ -183,12 +182,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastHelper.showSuccess(context, 'Profile updated successfully!');
           Navigator.of(context).pop(true); // Return true to indicate success
         }
       } catch (e) {
@@ -197,12 +191,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString().replaceAll('Exception: ', '')),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastHelper.showError(context, e.toString().replaceAll('Exception: ', ''));
         }
       }
     }

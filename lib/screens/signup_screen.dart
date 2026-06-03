@@ -5,6 +5,7 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../services/auth_service.dart';
 import '../services/common_service.dart';
+import '../utils/toast_helper.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -149,12 +150,7 @@ class _SignUpScreenState extends State<SignUpScreen>
   Future<void> _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
       if (!_agreeToTerms) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please agree to the Terms & Conditions'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.showError(context, 'Please agree to the Terms & Conditions');
         return;
       }
 
@@ -181,23 +177,13 @@ class _SignUpScreenState extends State<SignUpScreen>
 
       if (result['success']) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registration Successful. Please Login.'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastHelper.showSuccess(context, 'Registration Successful. Please Login.');
           // Navigate back to login or dashboard
           Navigator.of(context).pop(); // Pops back to login if came from there
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Registration Failed'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastHelper.showError(context, result['message'] ?? 'Registration Failed');
         }
       }
     }

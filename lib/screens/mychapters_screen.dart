@@ -7,6 +7,7 @@ import '../screens/payment_screen.dart';
 import '../services/student_service.dart';
 import '../widgets/global_bottom_bar.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/toast_helper.dart';
 
 class MyChaptersScreen extends StatefulWidget {
   final SubjectData subject;
@@ -152,11 +153,11 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
     }
   }
 
-  void _handleChapterTap(ChapterData chapter) {
+  void _handleChapterTap(ChapterData chapter) async {
     if (chapter.isLocked) {
       // Show payment screen if chapter is locked
       if (_feeDetails != null) {
-        Navigator.push(
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder:
@@ -174,14 +175,16 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
                 ),
           ),
         );
+        
+        if (result == true) {
+          // Payment was successful! Reload chapters to unlock them.
+          setState(() {
+            _isLoadingChapters = true;
+          });
+          _loadChapters();
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Payment information not available. Please try again.',
-            ),
-          ),
-        );
+        ToastHelper.showError(context, 'Payment information not available. Please try again.');
       }
     } else {
       // Navigate to video lessons screen for unlocked chapters
