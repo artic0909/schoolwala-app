@@ -109,6 +109,14 @@ class _FeesScreenState extends State<FeesScreen> {
     final hasSubscription = _paymentInfo!['has_active_subscription'] ?? false;
     final feesData = _paymentInfo!['fees'];
     final classData = _paymentInfo!['class'];
+    final latestTransaction = _paymentInfo!['latest_transaction'];
+    
+    double amount = 0.0;
+    if (latestTransaction != null && latestTransaction['amount'] != null) {
+      amount = double.tryParse(latestTransaction['amount'].toString()) ?? 0.0;
+    } else {
+      amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
+    }
     final currentSubscription = _paymentInfo!['current_subscription'];
 
     return SingleChildScrollView(
@@ -248,7 +256,13 @@ class _FeesScreenState extends State<FeesScreen> {
   }
 
   Widget _buildPendingFeesCard(dynamic classData, dynamic feesData) {
-    final amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
+    final latestTransaction = _paymentInfo?['latest_transaction'];
+    double amount = 0.0;
+    if (latestTransaction != null && latestTransaction['amount'] != null) {
+      amount = double.tryParse(latestTransaction['amount'].toString()) ?? 0.0;
+    } else {
+      amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
+    }
     final className = classData['name'] ?? 'Class';
 
     return Container(

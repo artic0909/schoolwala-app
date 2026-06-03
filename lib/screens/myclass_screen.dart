@@ -498,7 +498,14 @@ class _MyClassScreenState extends State<MyClassScreen> {
     final currentSubscription = _paymentInfo!['current_subscription'];
     
     final className = classData['name'] ?? 'Class';
-    final amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
+    final latestTransaction = _paymentInfo!['latest_transaction'];
+    
+    double amount = 0.0;
+    if (latestTransaction != null && latestTransaction['amount'] != null) {
+      amount = double.tryParse(latestTransaction['amount'].toString()) ?? 0.0;
+    } else {
+      amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
+    }
 
     String subtitle = 'Pending Fees';
     Color subtitleColor = Colors.red.withValues(alpha: 0.8);
