@@ -3,7 +3,6 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../constants/app_constants.dart';
 import '../screens/myvideos_screen.dart';
 import '../services/student_service.dart';
-import '../widgets/global_bottom_bar.dart';
 
 class PlayVideoScreen extends StatefulWidget {
   final VideoData video;
@@ -217,7 +216,6 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
               ),
             ],
           ),
-          bottomNavigationBar: const GlobalBottomBar(currentIndex: 2),
         );
       },
     );

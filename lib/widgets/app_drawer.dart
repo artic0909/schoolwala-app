@@ -134,7 +134,17 @@ class _AppDrawerState extends State<AppDrawer> {
                 _buildDrawerItem(
                   icon: Icons.home_rounded,
                   title: 'Home',
-                  onTap: () => Navigator.pop(context),
+                  isSelected: widget.currentRoute == 'Home',
+                  onTap: () {
+                    Navigator.pop(context); // Close drawer
+                    if (widget.currentRoute != 'Home') {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyClassScreen(studentName: widget.studentName)),
+                        (route) => false,
+                      );
+                    }
+                  },
                 ),
                 Theme(
                   data: Theme.of(context).copyWith(
@@ -196,12 +206,14 @@ class _AppDrawerState extends State<AppDrawer> {
                   isSelected: widget.currentRoute == 'Profile',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfileScreen(studentName: widget.studentName),
-                      ),
-                    );
+                    if (widget.currentRoute != 'Profile') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProfileScreen(studentName: widget.studentName),
+                        ),
+                      );
+                    }
                   },
                 ),
                 _buildDrawerItem(
@@ -210,12 +222,14 @@ class _AppDrawerState extends State<AppDrawer> {
                   isSelected: widget.currentRoute == 'Transactions',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TransactionsScreen(studentName: widget.studentName),
-                      ),
-                    );
+                    if (widget.currentRoute != 'Transactions') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TransactionsScreen(studentName: widget.studentName),
+                        ),
+                      );
+                    }
                   },
                 ),
                 _buildDrawerItem(
@@ -224,12 +238,14 @@ class _AppDrawerState extends State<AppDrawer> {
                   isSelected: widget.currentRoute == 'Fees',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FeesScreen(studentName: widget.studentName),
-                      ),
-                    );
+                    if (widget.currentRoute != 'Fees') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FeesScreen(studentName: widget.studentName),
+                        ),
+                      );
+                    }
                   },
                 ),
                 _buildDrawerItem(

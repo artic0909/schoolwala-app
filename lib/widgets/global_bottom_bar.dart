@@ -17,30 +17,37 @@ class GlobalBottomBar extends StatelessWidget {
 
     switch (index) {
       case 0: // Home
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyClassScreen(studentName: studentName)),
-        );
+        if (currentIndex != 0) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => MyClassScreen(studentName: studentName)),
+            (route) => false,
+          );
+        }
         break;
       case 1: // My Classes (Placeholder for now)
-        if (currentIndex != 0) {
-          Navigator.pushReplacement(
+        if (currentIndex != 1) {
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => MyClassScreen(studentName: studentName)),
           );
         }
         break;
       case 2: // Fees
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => FeesScreen(studentName: studentName)),
-        );
+        if (currentIndex != 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FeesScreen(studentName: studentName)),
+          );
+        }
         break;
       case 3: // Profile
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ProfileScreen(studentName: studentName)),
-        );
+        if (currentIndex != 3) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileScreen(studentName: studentName)),
+          );
+        }
         break;
       case 4: // More
         Scaffold.of(context).openDrawer();
