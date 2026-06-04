@@ -141,7 +141,7 @@ class _MyChaptersScreenState extends State<MyChaptersScreen> {
           setState(() {
             _feeDetails = {
               'id': feesData['id'],
-              'class_id': feesData['class_id'],
+              'class_id': feesData['class_id'] ?? (classData != null ? classData['id'] : ''),
               'amount': feesData['amount']?.toString() ?? '0',
               'qrimage': feesData['qrimage'],
             };

@@ -337,7 +337,12 @@ class StudentService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': json.decode(response.body)};
       }
-      return {'success': false, 'message': 'Failed to create order'};
+      try {
+        final error = json.decode(response.body);
+        return {'success': false, 'message': error['message'] ?? error['error'] ?? 'Failed to create order: ${response.statusCode}'};
+      } catch (e) {
+        return {'success': false, 'message': 'Failed to create order: ${response.statusCode}'};
+      }
     } catch (e) {
       return {'success': false, 'message': 'Connection error: $e'};
     }
@@ -357,7 +362,12 @@ class StudentService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': json.decode(response.body)};
       }
-      return {'success': false, 'message': 'Failed to verify payment'};
+      try {
+        final error = json.decode(response.body);
+        return {'success': false, 'message': error['message'] ?? error['error'] ?? 'Failed to verify payment'};
+      } catch (e) {
+        return {'success': false, 'message': 'Failed to verify payment'};
+      }
     } catch (e) {
       return {'success': false, 'message': 'Connection error: $e'};
     }

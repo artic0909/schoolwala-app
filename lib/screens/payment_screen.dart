@@ -40,6 +40,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   
   String? _amount;
   String? _feeId;
+  String? _classId;
 
   bool _isSubmitting = false;
   bool _isLoadingFees = false;
@@ -51,6 +52,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.initState();
     _amount = widget.amount;
     _feeId = widget.feeId;
+    _classId = widget.classId;
 
     _studentNameController.text = widget.studentName;
     _classController.text = widget.className;
@@ -87,6 +89,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         final classInfo = data['class'];
         if (classInfo != null && mounted) {
           setState(() {
+            _classId = classInfo['id']?.toString() ?? _classId;
             String className =
                 classInfo['name'] ??
                 classInfo['class_name'] ??
@@ -140,7 +143,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     try {
       // 1. Create Order on Backend
       final orderResult = await StudentService.createRazorpayOrder({
-        'class_id': widget.classId,
+        'class_id': _classId,
         'fees_id': _feeId ?? widget.feeId,
       });
 
@@ -200,7 +203,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         'razorpay_order_id': response.orderId,
         'razorpay_payment_id': response.paymentId,
         'razorpay_signature': response.signature,
-        'class_id': widget.classId,
+        'class_id': _classId,
         'fees_id': _feeId ?? widget.feeId,
         'subject_id': widget.subjectId,
       });
