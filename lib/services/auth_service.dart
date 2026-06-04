@@ -140,16 +140,15 @@ class AuthService {
     try {
       final headers = await getAuthHeaders();
       await http.post(Uri.parse(ApiConstants.logoutEndpoint), headers: headers);
-
+    } catch (e) {
+      debugPrint('Logout Error: $e');
+    } finally {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
       userNotifier.value = null;
-      return true;
-    } catch (e) {
-      debugPrint('Logout Error: $e');
-      return false; // Still return false, but we might want to clear local data anyway
     }
+    return true;
   }
 
   // Get Current User (Local)

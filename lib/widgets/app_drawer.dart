@@ -5,7 +5,6 @@ import '../services/auth_service.dart';
 import '../screens/profile_screen.dart';
 import '../screens/mychapters_screen.dart';
 import '../screens/myclass_screen.dart';
-import '../screens/login_screen.dart';
 import '../screens/transactions_screen.dart';
 import '../screens/fees_screen.dart';
 import '../screens/privacy_policy_screen.dart';
@@ -280,24 +279,6 @@ class _AppDrawerState extends State<AppDrawer> {
                       );
                     }
                   },
-                ),
-                const Divider(height: 16, color: Colors.transparent),
-                _buildDrawerItem(
-                  icon: Icons.logout_rounded,
-                  title: 'Logout',
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await AuthService.logout();
-                    if (context.mounted) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    }
-                  },
-                  textColor: Colors.red,
-                  iconColor: Colors.red,
                 ),
               ],
             ),
