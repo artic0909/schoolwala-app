@@ -309,7 +309,7 @@ class _AppDrawerState extends State<AppDrawer> {
             child: Column(
               children: [
                 const Text(
-                  'Schoolwala App',
+                  'Schoolwala Education For All',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -318,7 +318,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Version 1.0.0',
+                  'Version 2.0.0',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textGray.withValues(alpha: 0.7),
