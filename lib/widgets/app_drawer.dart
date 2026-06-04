@@ -309,7 +309,7 @@ class _AppDrawerState extends State<AppDrawer> {
             child: Column(
               children: [
                 const Text(
-                  'Schoolwala Education For All',
+                  'Schoolwala - For All',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
