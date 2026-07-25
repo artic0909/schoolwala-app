@@ -318,8 +318,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                             builder:
                                 (context) => Container(
                                   padding: const EdgeInsets.all(24),
-                                  height: 200,
                                   child: Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
