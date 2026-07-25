@@ -198,7 +198,7 @@ class _SplashScreenState extends State<SplashScreen>
                       transform:
                           Matrix4.identity()
                             ..setEntry(3, 2, 0.001) // Perspective
-                            ..scale(_zoomAnimation.value)
+                            ..scaleByDouble(_zoomAnimation.value, _zoomAnimation.value, _zoomAnimation.value, 1.0)
                             ..rotateY(_flipAnimation.value),
                       child: Container(
                         width: 120,

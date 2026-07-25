@@ -548,7 +548,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                       ),
                     )
                     : DropdownButtonFormField<String>(
-                      value: _selectedClass,
+                      initialValue: _selectedClass,
                       decoration: InputDecoration(
                         hintText: 'Choose Class',
                         hintStyle: TextStyle(

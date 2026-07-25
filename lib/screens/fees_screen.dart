@@ -248,13 +248,7 @@ class _FeesScreenState extends State<FeesScreen> {
   }
 
   Widget _buildPendingFeesCard(dynamic classData, dynamic feesData) {
-    final latestTransaction = _paymentInfo?['latest_transaction'];
-    double amount = 0.0;
-    if (latestTransaction != null && latestTransaction['amount'] != null) {
-      amount = double.tryParse(latestTransaction['amount'].toString()) ?? 0.0;
-    } else {
-      amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
-    }
+    double amount = double.tryParse(feesData['amount']?.toString() ?? '0') ?? 0.0;
     final className = classData['name'] ?? 'Class';
 
     return Container(
