@@ -292,10 +292,10 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
   Widget _buildFeedbackSection() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
@@ -311,12 +311,12 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
           const Text(
             'Comment',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: AppColors.darkNavy,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             children: List.generate(5, (index) {
               return IconButton(
@@ -328,38 +328,38 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
                 icon: Icon(
                   index < _rating ? Icons.star : Icons.star_border,
                   color: index < _rating ? Colors.amber : Colors.grey.withValues(alpha: 0.4),
-                  size: 28,
+                  size: 24,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               );
             }).map((e) => Padding(padding: const EdgeInsets.only(right: 6), child: e)).toList(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           TextField(
             controller: _feedbackController,
             maxLines: 2,
             decoration: InputDecoration(
               hintText: 'Your thoughts, questions, or suggestions...',
-              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.6), fontSize: 14),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.6), fontSize: 13),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: AppColors.primaryOrange),
               ),
               filled: true,
               fillColor: Colors.grey.withValues(alpha: 0.05),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
@@ -367,7 +367,7 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryOrange,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -375,14 +375,14 @@ class _PlayVideoScreenState extends State<PlayVideoScreen> {
               ),
               icon: _isSubmittingFeedback
                   ? const SizedBox(
-                      width: 16,
-                      height: 16,
+                      width: 14,
+                      height: 14,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                  : const Icon(Icons.send_rounded, size: 16),
+                  : const Icon(Icons.send_rounded, size: 14),
               label: Text(
                 _isSubmittingFeedback ? 'Sending...' : 'Send',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
             ),
           ),
