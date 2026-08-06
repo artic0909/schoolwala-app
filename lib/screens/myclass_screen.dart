@@ -404,105 +404,105 @@ class _MyClassScreenState extends State<MyClassScreen> {
                                       ? (student['student_id'] ?? 'N/A')
                                       : 'N/A';
 
-                                  return Stack(
+                                  return Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '${_getGreeting()} 👋',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.textGray.withValues(alpha: 0.8),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            name,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.darkNavy,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(4),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.blue.withValues(alpha: 0.1),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: const Icon(Icons.class_, size: 12, color: Colors.blue),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Expanded(
-                                                child: Text(
-                                                  '${_className.isNotEmpty ? _className : 'Class'} | ID: $studentId',
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: AppColors.darkNavy,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      Positioned(
-                                        right: 0,
-                                        top: 0,
-                                        child: InkWell(
-                                          onTap: () {
-                                            if (studentId != 'N/A') {
-                                              Clipboard.setData(ClipboardData(text: studentId));
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: const Text('Student ID copied to clipboard'),
-                                                  backgroundColor: Colors.green,
-                                                  behavior: SnackBarBehavior.floating,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(10),
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primaryOrange.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: Border.all(
-                                                color: AppColors.primaryOrange.withValues(alpha: 0.3),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${_getGreeting()} 👋',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.textGray.withValues(alpha: 0.8),
                                               ),
                                             ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              name,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.darkNavy,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Row(
                                               children: [
-                                                Icon(
-                                                  Icons.copy_rounded,
-                                                  size: 14,
-                                                  color: AppColors.primaryOrange,
+                                                Container(
+                                                  padding: const EdgeInsets.all(4),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.blue.withValues(alpha: 0.1),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(Icons.class_, size: 12, color: Colors.blue),
                                                 ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  'Copy ID',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: AppColors.primaryOrange,
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    '${_className.isNotEmpty ? _className : 'Class'} | ID: $studentId',
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: AppColors.darkNavy,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
                                             ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      InkWell(
+                                        onTap: () {
+                                          if (studentId != 'N/A') {
+                                            Clipboard.setData(ClipboardData(text: studentId));
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: const Text('Student ID copied to clipboard'),
+                                                backgroundColor: Colors.green,
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primaryOrange.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: AppColors.primaryOrange.withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.copy_rounded,
+                                                size: 14,
+                                                color: AppColors.primaryOrange,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Copy ID',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.primaryOrange,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
