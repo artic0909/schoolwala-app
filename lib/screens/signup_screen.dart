@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import '../constants/app_constants.dart';
 import '../widgets/custom_text_field.dart';
@@ -449,6 +450,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                   label: "Parent's Name",
                   hintText: "Enter Parent's Name",
                   prefixIcon: Icons.person_outline,
+                  isRequired: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Please enter parent's name";
@@ -466,6 +468,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                   hintText: 'sosi@gmail.com',
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: Icons.email_outlined,
+                  isRequired: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
@@ -488,6 +491,11 @@ class _SignUpScreenState extends State<SignUpScreen>
                   hintText: '1234567890',
                   keyboardType: TextInputType.phone,
                   prefixIcon: Icons.phone_outlined,
+                  isRequired: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter mobile number';
@@ -507,6 +515,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                   label: "Student's Name",
                   hintText: "Enter Student's Name",
                   prefixIcon: Icons.child_care_outlined,
+                  isRequired: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Please enter Student's name";
@@ -524,6 +533,11 @@ class _SignUpScreenState extends State<SignUpScreen>
                   hintText: "Enter Student's Age",
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.cake_outlined,
+                  isRequired: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(2),
+                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Please enter Student's age";
@@ -539,7 +553,21 @@ class _SignUpScreenState extends State<SignUpScreen>
                 const SizedBox(height: 16),
 
                 // Select Class Dropdown
-                const Text('Select Class', style: AppTextStyles.inputLabel),
+                Text.rich(
+                  TextSpan(
+                    text: 'Select Class',
+                    style: AppTextStyles.inputLabel,
+                    children: const [
+                      TextSpan(
+                        text: ' *',
+                        style: TextStyle(
+                          color: AppColors.primaryOrange,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 8),
                 _isLoadingClasses
                     ? const Center(
@@ -607,16 +635,6 @@ class _SignUpScreenState extends State<SignUpScreen>
 
                 const SizedBox(height: 16),
 
-                // Ground Partner Code (Optional)
-                CustomTextField(
-                  controller: _gpCodeController,
-                  label: 'Ground Partner Code (Optional)',
-                  hintText: 'Enter GP Code (e.g. GPALL001)',
-                  prefixIcon: Icons.qr_code_outlined,
-                ),
-
-                const SizedBox(height: 16),
-
                 // Password
                 CustomTextField(
                   controller: _passwordController,
@@ -624,6 +642,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                   hintText: '••••••••',
                   obscureText: _obscurePassword,
                   prefixIcon: Icons.lock_outline,
+                  isRequired: true,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -646,6 +665,17 @@ class _SignUpScreenState extends State<SignUpScreen>
                     }
                     return null;
                   },
+                ),
+
+                const SizedBox(height: 16),
+
+                // GP Code (Optional) - placed at last
+                CustomTextField(
+                  controller: _gpCodeController,
+                  label: 'GP Code (Optional)',
+                  hintText: 'Enter GP Code (e.g. GPALL001)',
+                  prefixIcon: Icons.qr_code_outlined,
+                  isRequired: false,
                 ),
 
 

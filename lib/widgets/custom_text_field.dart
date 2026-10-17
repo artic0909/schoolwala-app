@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_constants.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -10,6 +11,8 @@ class CustomTextField extends StatelessWidget {
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool isRequired;
 
   const CustomTextField({
     super.key,
@@ -21,6 +24,8 @@ class CustomTextField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.validator,
+    this.inputFormatters,
+    this.isRequired = false,
   });
 
   @override
@@ -28,15 +33,30 @@ class CustomTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: AppTextStyles.inputLabel,
-        ),
-        const SizedBox(height: 8),
+        if (label.isNotEmpty) ...[
+          Text.rich(
+            TextSpan(
+              text: label,
+              style: AppTextStyles.inputLabel,
+              children: [
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(
+                      color: AppColors.primaryOrange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         TextFormField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           validator: validator,
           style: const TextStyle(
             fontSize: 16,
