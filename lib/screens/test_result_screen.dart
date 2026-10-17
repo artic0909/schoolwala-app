@@ -166,6 +166,44 @@ class _TestResultScreenState extends State<TestResultScreen> {
     }
   }
 
+  Widget _buildStatItem({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: iconColor, size: 16),
+            const SizedBox(width: 5),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Calculate correct answers locally for display
@@ -173,205 +211,392 @@ class _TestResultScreenState extends State<TestResultScreen> {
     int totalQuestions =
         _totalQuestions > 0 ? _totalQuestions : widget.questions.length;
     int totalPoints = _score;
+    double percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) : 0.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
         title: const Text(
-          'Test Results',
+          'Test Result',
           style: TextStyle(
             color: AppColors.darkNavy,
             fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
         ),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.darkNavy),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.darkNavy, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body:
-          _isSubmitting
-              ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Submitting your test...'),
-                  ],
-                ),
-              )
-              : _errorMessage != null
+      body: _isSubmitting
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primaryOrange),
+                  SizedBox(height: 16),
+                  Text(
+                    'Calculating your score...',
+                    style: TextStyle(color: AppColors.textGray, fontSize: 15),
+                  ),
+                ],
+              ),
+            )
+          : _errorMessage != null
               ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          size: 64,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textGray,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _submitTest,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryOrange,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  physics: const BouncingScrollPhysics(),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppColors.textGray,
+                      // Hero Result Banner
+                      Container(
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFFF9933),
+                              Color(0xFFFF7A00),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryOrange.withValues(alpha: 0.35),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            // Trophy / Feedback pill
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(7),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.22),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.emoji_events_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  percentage >= 0.8
+                                      ? 'Outstanding Job!'
+                                      : percentage >= 0.5
+                                          ? 'Well Done!'
+                                          : 'Keep Practicing!',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Score text
+                            Text(
+                              '$totalPoints / ${totalQuestions * 2}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 44,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Score Achieved • $correctAnswers of $totalQuestions Correct',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            // Performance Stats Box
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildStatItem(
+                                    icon: Icons.check_circle_rounded,
+                                    iconColor: const Color(0xFF4ADE80),
+                                    label: 'Correct',
+                                    value: '$correctAnswers',
+                                  ),
+                                  Container(
+                                    height: 28,
+                                    width: 1,
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
+                                  _buildStatItem(
+                                    icon: Icons.cancel_rounded,
+                                    iconColor: const Color(0xFFF87171),
+                                    label: 'Incorrect',
+                                    value: '${totalQuestions - correctAnswers}',
+                                  ),
+                                  Container(
+                                    height: 28,
+                                    width: 1,
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
+                                  _buildStatItem(
+                                    icon: Icons.pie_chart_rounded,
+                                    iconColor: Colors.white,
+                                    label: 'Accuracy',
+                                    value: '${(percentage * 100).toInt()}%',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _submitTest,
-                        child: const Text('Retry'),
+
+                      const SizedBox(height: 28),
+
+                      // Section Header
+                      Row(
+                        children: [
+                          const Text(
+                            'Review Questions',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.darkNavy,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryOrange.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '$totalQuestions Questions',
+                              style: const TextStyle(
+                                color: AppColors.primaryOrange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+
+                      const SizedBox(height: 16),
+
+                      // Questions Review List
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: widget.questions.length,
+                        itemBuilder: (context, index) {
+                          final question = widget.questions[index];
+                          final bool isUserCorrect =
+                              question.selectedOptionIndex != null &&
+                              question.selectedOptionIndex == question.correctOptionIndex;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: isUserCorrect
+                                    ? const Color(0xFF22C55E).withValues(alpha: 0.35)
+                                    : const Color(0xFFEF4444).withValues(alpha: 0.35),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Question Header (Number pill + Result pill)
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryOrange.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'Q${index + 1}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primaryOrange,
+                                        ),
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isUserCorrect
+                                            ? const Color(0xFFDCFCE7)
+                                            : const Color(0xFFFEE2E2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isUserCorrect
+                                                ? Icons.check_circle_rounded
+                                                : Icons.cancel_rounded,
+                                            size: 14,
+                                            color: isUserCorrect
+                                                ? const Color(0xFF16A34A)
+                                                : const Color(0xFFDC2626),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isUserCorrect ? 'Correct' : 'Incorrect',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: isUserCorrect
+                                                  ? const Color(0xFF16A34A)
+                                                  : const Color(0xFFDC2626),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 14),
+
+                                // Question Text
+                                Text(
+                                  question.questionText,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.darkNavy,
+                                    height: 1.45,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 16),
+
+                                // Options
+                                ...List.generate(question.options.length, (optIndex) {
+                                  final bool isSelected =
+                                      question.selectedOptionIndex == optIndex;
+                                  final bool isCorrect =
+                                      question.correctOptionIndex == optIndex;
+                                  final bool isWrong = isSelected && !isCorrect;
+
+                                  return PracticeTestOption(
+                                    text: question.options[optIndex],
+                                    indexLabel: String.fromCharCode(65 + optIndex),
+                                    isSelected: isSelected,
+                                    isCorrectAnswer: isCorrect,
+                                    isWrongAnswer: isWrong,
+                                    onTap: () {},
+                                    showResult: true,
+                                  );
+                                }),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Done Button
+                      CustomButton(
+                        text: 'Done',
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-              )
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // Score Card
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primaryOrange, Color(0xFFFF9966)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryOrange.withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'Total Score',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '$totalPoints / ${totalQuestions * 2}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'You answered $correctAnswers out of $totalQuestions correct',
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Review Answers',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkNavy,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Review List
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: widget.questions.length,
-                      itemBuilder: (context, index) {
-                        final question = widget.questions[index];
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 24),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: AppColors.inputBorder.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                question.questionText,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.darkNavy,
-                                  height: 1.4,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              ...List.generate(question.options.length, (
-                                optIndex,
-                              ) {
-                                final bool isSelected =
-                                    question.selectedOptionIndex == optIndex;
-                                final bool isCorrect =
-                                    question.correctOptionIndex == optIndex;
-                                final bool isWrong = isSelected && !isCorrect;
-
-                                return PracticeTestOption(
-                                  text: question.options[optIndex],
-                                  indexLabel: String.fromCharCode(
-                                    65 + optIndex,
-                                  ),
-                                  isSelected: isSelected,
-                                  isCorrectAnswer: isCorrect,
-                                  isWrongAnswer: isWrong,
-                                  onTap: () {}, // No interaction in result
-                                  showResult: true,
-                                );
-                              }),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    CustomButton(
-                      text: 'Back to Home',
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
     );
   }
 }
