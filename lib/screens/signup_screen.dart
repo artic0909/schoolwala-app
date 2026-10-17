@@ -25,13 +25,11 @@ class _SignUpScreenState extends State<SignUpScreen>
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _childNameController = TextEditingController();
   final TextEditingController _childAgeController = TextEditingController();
+  final TextEditingController _gpCodeController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
   bool _isLoading = false;
   String? _selectedClass;
@@ -142,8 +140,8 @@ class _SignUpScreenState extends State<SignUpScreen>
     _mobileController.dispose();
     _childNameController.dispose();
     _childAgeController.dispose();
+    _gpCodeController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -159,15 +157,18 @@ class _SignUpScreenState extends State<SignUpScreen>
       });
 
       final registerData = {
-        'parent_name': _parentNameController.text,
-        'email': _emailController.text,
-        'mobile': _mobileController.text,
-        'student_name': _childNameController.text,
-        'age': _childAgeController.text,
+        'parent_name': _parentNameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'mobile': _mobileController.text.trim(),
+        'student_name': _childNameController.text.trim(),
+        'age': _childAgeController.text.trim(),
         'class_id': _selectedClass ?? '',
         'password': _passwordController.text,
-        'password_confirmation': _confirmPasswordController.text,
       };
+
+      if (_gpCodeController.text.trim().isNotEmpty) {
+        registerData['gp_code'] = _gpCodeController.text.trim();
+      }
 
       final result = await AuthService.register(registerData);
 
@@ -606,6 +607,16 @@ class _SignUpScreenState extends State<SignUpScreen>
 
                 const SizedBox(height: 16),
 
+                // Ground Partner Code (Optional)
+                CustomTextField(
+                  controller: _gpCodeController,
+                  label: 'Ground Partner Code (Optional)',
+                  hintText: 'Enter GP Code (e.g. GPALL001)',
+                  prefixIcon: Icons.qr_code_outlined,
+                ),
+
+                const SizedBox(height: 16),
+
                 // Password
                 CustomTextField(
                   controller: _passwordController,
@@ -637,38 +648,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                   },
                 ),
 
-                const SizedBox(height: 16),
 
-                // Confirm Password
-                CustomTextField(
-                  controller: _confirmPasswordController,
-                  label: 'Confirm Password',
-                  hintText: '••••••••',
-                  obscureText: _obscureConfirmPassword,
-                  prefixIcon: Icons.lock_outline,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: AppColors.textGray,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
 
                 const SizedBox(height: 16),
 
