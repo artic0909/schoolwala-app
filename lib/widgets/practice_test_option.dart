@@ -30,12 +30,53 @@ class PracticeTestOption extends StatelessWidget {
     Color textColor = AppColors.darkNavy;
     Color labelColor = AppColors.primaryOrange;
     Color labelBgColor = AppColors.primaryOrange.withValues(alpha: 0.1);
+    Widget? trailingIcon;
+    double borderWidth = 1.0;
 
-    if (isSelected) {
-      borderColor = AppColors.primaryOrange;
-      backgroundColor = AppColors.primaryOrange.withValues(alpha: 0.05);
-      labelColor = Colors.white;
-      labelBgColor = AppColors.primaryOrange;
+    if (showResult) {
+      if (isCorrectAnswer) {
+        // Correct answer: green border, light green background, check icon
+        borderColor = const Color(0xFF22C55E); // Green
+        backgroundColor = const Color(0xFFF0FDF4); // Light Green
+        textColor = const Color(0xFF15803D);
+        labelColor = Colors.white;
+        labelBgColor = const Color(0xFF22C55E);
+        borderWidth = 2.0;
+        trailingIcon = const Icon(
+          Icons.check_circle_rounded,
+          color: Color(0xFF22C55E),
+          size: 22,
+        );
+      } else if (isWrongAnswer) {
+        // Selected wrong answer: red border, light red background, cross icon
+        borderColor = const Color(0xFFEF4444); // Red
+        backgroundColor = const Color(0xFFFEF2F2); // Light Red
+        textColor = const Color(0xFFB91C1C);
+        labelColor = Colors.white;
+        labelBgColor = const Color(0xFFEF4444);
+        borderWidth = 2.0;
+        trailingIcon = const Icon(
+          Icons.cancel_rounded,
+          color: Color(0xFFEF4444),
+          size: 22,
+        );
+      } else {
+        // Other neutral options in result
+        borderColor = AppColors.inputBorder.withValues(alpha: 0.6);
+        backgroundColor = Colors.white;
+        textColor = AppColors.textGray;
+        labelColor = AppColors.textGray;
+        labelBgColor = AppColors.inputBackground;
+        borderWidth = 1.0;
+      }
+    } else {
+      if (isSelected) {
+        borderColor = AppColors.primaryOrange;
+        backgroundColor = AppColors.primaryOrange.withValues(alpha: 0.05);
+        labelColor = Colors.white;
+        labelBgColor = AppColors.primaryOrange;
+        borderWidth = 2.0;
+      }
     }
 
     return GestureDetector(
@@ -48,10 +89,7 @@ class PracticeTestOption extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: borderColor,
-            width:
-                isSelected || (showResult && (isCorrectAnswer || isWrongAnswer))
-                    ? 2
-                    : 1,
+            width: borderWidth,
           ),
         ),
         child: Row(
@@ -84,6 +122,10 @@ class PracticeTestOption extends StatelessWidget {
                 ),
               ),
             ),
+            if (trailingIcon != null) ...[
+              const SizedBox(width: 8),
+              trailingIcon,
+            ],
           ],
         ),
       ),

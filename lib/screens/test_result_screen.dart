@@ -40,6 +40,28 @@ class _TestResultScreenState extends State<TestResultScreen> {
       _isSubmitting = false;
       _score = widget.score ?? 0;
       _totalQuestions = widget.totalQuestions ?? widget.questions.length;
+
+      // Ensure student answer selection is synced
+      for (int i = 0; i < widget.questions.length; i++) {
+        final q = widget.questions[i];
+        if (q.selectedOptionIndex == null) {
+          final sAns = widget.studentAnswers[i.toString()] ??
+              widget.studentAnswers[q.id.toString()] ??
+              q.rawStudentAnswer;
+          if (sAns != null) {
+            final sText = sAns.trim().toLowerCase();
+            final sIdx = q.options.indexWhere((opt) {
+              final oText = opt.trim().toLowerCase();
+              return oText == sText ||
+                  oText.contains(sText) ||
+                  sText.contains(oText);
+            });
+            if (sIdx != -1) {
+              q.selectedOptionIndex = sIdx;
+            }
+          }
+        }
+      }
     } else {
       _submitTest();
     }
@@ -73,20 +95,51 @@ class _TestResultScreenState extends State<TestResultScreen> {
 
         // Update questions with correct answers from backend
         for (int i = 0; i < widget.questions.length; i++) {
-          final correctAnsText = correctAnswersMap[i.toString()];
+          final correctAnsText = correctAnswersMap[i.toString()] ??
+              correctAnswersMap[widget.questions[i].id.toString()];
           if (correctAnsText != null) {
             final String rawText = correctAnsText.toString();
             widget.questions[i].rawCorrectAnswer = rawText;
 
             final String targetText = rawText.trim().toLowerCase();
-            final correctIdx = widget.questions[i].options.indexWhere((opt) {
+            int correctIdx = widget.questions[i].options.indexWhere((opt) {
               final oText = opt.trim().toLowerCase();
               return oText == targetText ||
                   oText.contains(targetText) ||
                   targetText.contains(oText);
             });
+            if (correctIdx == -1) {
+              if (targetText == 'a' || targetText == '0') {
+                correctIdx = 0;
+              } else if (targetText == 'b' || targetText == '1') {
+                correctIdx = 1;
+              } else if (targetText == 'c' || targetText == '2') {
+                correctIdx = 2;
+              } else if (targetText == 'd' || targetText == '3') {
+                correctIdx = 3;
+              }
+            }
             if (correctIdx != -1) {
               widget.questions[i].correctOptionIndex = correctIdx;
+            }
+          }
+
+          // Ensure student answer selection is synced
+          if (widget.questions[i].selectedOptionIndex == null) {
+            final sAns = widget.studentAnswers[i.toString()] ??
+                widget.studentAnswers[widget.questions[i].id.toString()] ??
+                widget.questions[i].rawStudentAnswer;
+            if (sAns != null) {
+              final sText = sAns.trim().toLowerCase();
+              final sIdx = widget.questions[i].options.indexWhere((opt) {
+                final oText = opt.trim().toLowerCase();
+                return oText == sText ||
+                    oText.contains(sText) ||
+                    sText.contains(oText);
+              });
+              if (sIdx != -1) {
+                widget.questions[i].selectedOptionIndex = sIdx;
+              }
             }
           }
         }
@@ -283,64 +336,24 @@ class _TestResultScreenState extends State<TestResultScreen> {
                               ...List.generate(question.options.length, (
                                 optIndex,
                               ) {
+                                final bool isSelected =
+                                    question.selectedOptionIndex == optIndex;
+                                final bool isCorrect =
+                                    question.correctOptionIndex == optIndex;
+                                final bool isWrong = isSelected && !isCorrect;
+
                                 return PracticeTestOption(
                                   text: question.options[optIndex],
                                   indexLabel: String.fromCharCode(
                                     65 + optIndex,
                                   ),
-                                  isSelected:
-                                      question.selectedOptionIndex == optIndex,
+                                  isSelected: isSelected,
+                                  isCorrectAnswer: isCorrect,
+                                  isWrongAnswer: isWrong,
                                   onTap: () {}, // No interaction in result
                                   showResult: true,
                                 );
                               }),
-
-                              const SizedBox(height: 12),
-
-                              // Correct Answer Indicator
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.inputBorder.withValues(alpha: 
-                                      0.5,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F7FF),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.check,
-                                        color: Color(0xFF3B9EFF),
-                                        size: 18,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'Correct : ${question.rawCorrectAnswer ?? (question.correctOptionIndex < question.options.length ? question.options[question.correctOptionIndex] : "N/A")}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.darkNavy,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
                             ],
                           ),
                         );
